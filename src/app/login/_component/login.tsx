@@ -5,16 +5,17 @@ export default function Login() {
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
 
       {/* LEFT IMAGE SECTION */}
-      <div className="relative hidden md:block">
+      <div className="hidden md:flex justify-center items-center bg-brand-gradient">
         <Image
           src="/images/hero.png"
           alt="ratnasmriti-login"
-          fill
+          width={500}
+          height={500}
           priority
-          className="object-cover"
+          className="object-cover mb-20"
         />
 
-        <div className="absolute bottom-8 left-8 max-w-md ">
+        <div className="absolute bottom-8 left-8 max-w-md text-white">
           <p className="text-lg font-medium">
            Ratnasmriti Gems And Jewellers - We Provide the best.
           </p>
@@ -41,7 +42,7 @@ export default function Login() {
             <div>
               <label className="block text-sm mb-1">Email or Phone</label>
               <input
-                type="text"
+                type="email"
                 placeholder="admin@gmail.com"
                 className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
