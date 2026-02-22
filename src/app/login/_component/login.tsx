@@ -1,37 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
 import { useLogin } from "../_hooks/useLogin";
-import { loginSchema } from "@/schemas/auth.schema";
 
 export default function Login() {
-  const { mutate, isPending, error } = useLogin();
-
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const parsed = loginSchema.safeParse(formData);
-
-    if (!parsed.success) {
-      console.log(parsed.error.flatten());
-      return;
-    }
-
-    mutate(parsed.data);
-  };
+  const { formData, handleChange, handleSubmit, isPending, error } =
+    useLogin();
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
