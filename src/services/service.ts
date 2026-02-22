@@ -25,7 +25,7 @@ export const getService = async (
 export const postService = async (
   endPoint: string,
   reqest: object,
-  header: object
+  header?: object
 ) => {
   try {
     const res = await fetch(base_url + endPoint, {

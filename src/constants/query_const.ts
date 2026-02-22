@@ -5,3 +5,4 @@ const auth = {
     profile : "/auth/profile"
 }
 
+export default auth
