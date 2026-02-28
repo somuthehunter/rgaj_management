@@ -4,8 +4,11 @@ import { useMutation } from "@tanstack/react-query";
 import { loginUser, LoginPayload } from "@/services/auth.service";
 import { useState } from "react";
 import { loginSchema } from "@/schemas/auth.schema";
+import { useRouter } from "next/navigation";
 
 export function useLogin() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<LoginPayload>({
     email: "",
     password: "",
@@ -13,6 +16,9 @@ export function useLogin() {
 
   const mutation = useMutation({
     mutationFn: (data: LoginPayload) => loginUser(data),
+    onSuccess: () => {
+      router.push("/Dashboard"); // use lowercase if folder is lowercase
+    },
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
