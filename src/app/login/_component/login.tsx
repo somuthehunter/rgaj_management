@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useLogin } from "../_hooks/useLogin";
-
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 export default function Login() {
   const { formData, handleChange, handleSubmit, isPending, error } =
     useLogin();
@@ -43,7 +44,7 @@ export default function Login() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm mb-1">Email or Phone</label>
-              <input
+              <Input
                 name="email"
                 type="email"
                 placeholder="admin@gmail.com"
@@ -55,7 +56,7 @@ export default function Login() {
 
             <div>
               <label className="block text-sm mb-1">Password</label>
-              <input
+              <Input
                 name="password"
                 type="password"
                 placeholder="••••••••"
@@ -71,13 +72,13 @@ export default function Login() {
               </a>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={isPending}
               className="w-full bg-teal-500 hover:bg-teal-600 text-black py-3 rounded-lg font-medium transition disabled:opacity-50"
             >
               {isPending ? "Signing in..." : "Sign In"}
-            </button>
+            </Button>
 
             {error && (
               <p className="text-red-500 text-sm mt-2">
