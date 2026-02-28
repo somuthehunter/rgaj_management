@@ -24,15 +24,19 @@ export const getService = async (
 // POST
 export const postService = async (
   endPoint: string,
-  reqest: object,
-  header: object
+  request: object,
+  header?: Record<string, string>
 ) => {
   try {
     const res = await fetch(base_url + endPoint, {
       method: "POST",
-      body: JSON.stringify(reqest),
-      headers: { ...header },
+      body: JSON.stringify(request),
+      headers: {
+        "Content-Type": "application/json",
+        ...header,
+      },
     });
+
     return await res.json();
   } catch (error) {
     console.log(error);
