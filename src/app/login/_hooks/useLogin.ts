@@ -16,8 +16,15 @@ export function useLogin() {
 
   const mutation = useMutation({
     mutationFn: (data: LoginPayload) => loginUser(data),
-    onSuccess: () => {
-      router.push("/Dashboard"); // use lowercase if folder is lowercase
+
+    onSuccess: (res) => {
+      const { user, accessToken } = res.data;
+
+      // store session
+      localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("token", accessToken);
+
+      router.push("/Dashboard");
     },
   });
 
