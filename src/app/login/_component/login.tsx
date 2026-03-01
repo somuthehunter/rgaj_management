@@ -2,9 +2,14 @@
 
 import Image from "next/image";
 import { useLogin } from "../_hooks/useLogin";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CheckCircle2Icon } from "lucide-react";
+import { use } from "react";
 
 export default function Login() {
-  const { formData, handleChange, handleSubmit, isPending, error } =
+  const { formData, handleChange, handleSubmit, isPending, error, isSuccess } =
     useLogin();
 
   return (
@@ -43,25 +48,23 @@ export default function Login() {
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-sm mb-1">Email or Phone</label>
-              <input
+              <Input
                 name="email"
                 type="email"
                 placeholder="admin@gmail.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
 
             <div>
               <label className="block text-sm mb-1">Password</label>
-              <input
+              <Input
                 name="password"
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
 
@@ -71,18 +74,29 @@ export default function Login() {
               </a>
             </div>
 
-            <button
-              type="submit"
-              disabled={isPending}
-              className="w-full bg-teal-500 hover:bg-teal-600 text-black py-3 rounded-lg font-medium transition disabled:opacity-50"
-            >
+            <Button type="submit" disabled={isPending} className="w-full ">
               {isPending ? "Signing in..." : "Sign In"}
-            </button>
+            </Button>
 
             {error && (
-              <p className="text-red-500 text-sm mt-2">
-                Login failed. Please try again.
-              </p>
+              <Alert variant="destructive" className="mt-4">
+                <CheckCircle2Icon />
+                <AlertTitle>Login Failed</AlertTitle>
+                <AlertDescription>
+                  Please check your credentials and try again.
+                </AlertDescription>
+              </Alert>
+            )}
+            {isSuccess && (
+              <Alert className="mt-4 border-green-600 bg-green-950 text-green-400 ">
+                <CheckCircle2Icon className="h-5 w-5 !text-green-500" />
+                <AlertTitle className="text-green-500">
+                  Login Successful
+                </AlertTitle>
+                <AlertDescription className="text-green-400">
+                  You have logged in successfully.
+                </AlertDescription>
+              </Alert>
             )}
           </form>
         </div>
