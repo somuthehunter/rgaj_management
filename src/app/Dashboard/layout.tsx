@@ -4,6 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import DashboardSidebar from "@/components/Dashboard/DashboardSidebar";
 import { isRouteAllowed } from "@/routes/protected-routes";
+import { UserRole } from "@/types";
+
+const normalizeRole = (role?: string): UserRole | null => {
+  if (!role) return null;
+  const upperRole = role.toUpperCase();
+  if (upperRole === UserRole.SUPER_ADMIN || upperRole === "ADMIN") return UserRole.SUPER_ADMIN; //leter change
+  if (upperRole === UserRole.STORE_ADMIN) return UserRole.STORE_ADMIN;
+  return null;
+};
 
 export default function DashboardLayout({
   children,
@@ -32,12 +41,14 @@ export default function DashboardLayout({
       return;
     }
 
-    if (!user?.role) {
+    const role = normalizeRole(user?.role);
+
+    if (!role) {
       router.replace("/login");
       return;
     }
 
-    if (!isRouteAllowed(pathname, user.role)) {
+    if (!isRouteAllowed(pathname, role)) {
       router.replace("/Dashboard/Overview");
     }
   }, [pathname, router]);

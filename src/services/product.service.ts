@@ -20,4 +20,7 @@ export const productService = {
 
   activate: (id: string) =>
     patchService(endpoints.products.activate(id), {}, {}),
+
+  returnToAdmin: (id: string, qty: number) =>
+    patchService(endpoints.products.returnToAdmin(id), { qty }, {}),
 };

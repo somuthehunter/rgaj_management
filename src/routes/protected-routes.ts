@@ -6,49 +6,51 @@ export interface RouteConfig {
   roles: UserRole[];
 }
 
+const normalizePath = (path: string) => path.toLowerCase();
+
 export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Overview",
     label: "Overview",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Stores",
     label: "Stores",
-    roles: [UserRole.ADMIN],
+    roles: [UserRole.SUPER_ADMIN],
   },
   {
     path: "/Dashboard/Orders",
     label: "Orders",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Products",
     label: "Products",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Sell",
     label: "Sell",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Transactions",
     label: "Transactions",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Statistics",
     label: "Statistics",
-    roles: [UserRole.ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
 ];
 
-export const isRouteAllowed = (
-  path: string,
-  role: UserRole
-): boolean => {
-  const route = protectedRoutes.find((r) => r.path === path);
+export const isRouteAllowed = (path: string, role: UserRole): boolean => {
+  const route = protectedRoutes.find(
+    (r) => normalizePath(r.path) === normalizePath(path),
+  );
   if (!route) return false;
   return route.roles.includes(role);
 };
+

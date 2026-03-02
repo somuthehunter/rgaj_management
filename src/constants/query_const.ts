@@ -13,6 +13,7 @@ const endpoints = {
     update: (id: string) => `/products/${id}`,
     delete: (id: string) => `/products/${id}`,
     activate: (id: string) => `/products/${id}/activate`,
+    returnToAdmin: (id: string) => `/products/${id}/return`,
   },
 
   stores: {

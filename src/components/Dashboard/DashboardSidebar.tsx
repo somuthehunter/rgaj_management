@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
-  Store,
-  ShoppingCart,
   Package,
-  CreditCard,
-  ArrowRightLeft,
-  BarChart3,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -18,20 +12,21 @@ import {
 import { cn } from "@/lib/utils";
 import { getUser, clearSession } from "@/services/session.service";
 import { protectedRoutes } from "@/routes/protected-routes";
+import { UserRole } from "@/types";
 
-const iconMap: Record<string, React.FC<{ className?: string }>> = {
-  "/Dashboard/overview": LayoutDashboard,
-  "/Dashboard/stores": Store,
-  "/Dashboard/orders": ShoppingCart,
-  "/Dashboard/products": Package,
-  "/Dashboard/sell": CreditCard,
-  "/Dashboard/transactions": ArrowRightLeft,
-  "/Dashboard/statistics": BarChart3,
-};
 type Props = {
   collapsed: boolean;
   setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
 };
+
+const normalizeRole = (role?: string): UserRole | null => {
+  if (!role) return null;
+  const upperRole = role.toUpperCase();
+  if (upperRole === UserRole.SUPER_ADMIN || upperRole === "ADMIN") return UserRole.SUPER_ADMIN; //leter change
+  if (upperRole === UserRole.STORE_ADMIN) return UserRole.STORE_ADMIN;
+  return null;
+};
+
 const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
   const pathname = usePathname();
   const router = useRouter();
@@ -46,8 +41,11 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
   const user = getUser();
   if (!user) return null;
 
+  const role = normalizeRole(user.role);
+  if (!role) return null;
+
   const visibleRoutes = protectedRoutes.filter((route) =>
-    route.roles.includes(user.role),
+    route.roles.includes(role),
   );
 
   const handleLogout = () => {
@@ -62,7 +60,6 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
         collapsed ? "w-16" : "w-60",
       )}
     >
-      {/* Logo */}
       <div className="flex items-center gap-2 px-4 h-16 border-b border-border">
         <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
           <Package className="h-4 w-4 text-white" />
@@ -74,10 +71,9 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         {visibleRoutes.map((route) => {
-          const isActive = pathname === route.path;
+          const isActive = pathname.toLowerCase() === route.path.toLowerCase();
 
           return (
             <Link
@@ -96,12 +92,11 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
         })}
       </nav>
 
-      {/* User & Logout */}
       <div className="border-t border-border p-3 space-y-2">
         {!collapsed && (
           <div className="px-2 py-1">
             <p className="text-xs font-medium truncate">{user.name}</p>
-            <p className="text-xs truncate">{user.role}</p>
+            <p className="text-xs truncate">{role}</p>
           </div>
         )}
         <button
@@ -113,7 +108,6 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
         </button>
       </div>
 
-      {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="absolute -right-3 top-20 h-6 w-6 rounded-full bg-secondary border border-border flex items-center justify-center"

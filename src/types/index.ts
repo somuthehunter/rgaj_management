@@ -1,6 +1,6 @@
 // Enums
 export enum UserRole {
-  ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
   STORE_ADMIN = "STORE_ADMIN",
 }
 
@@ -119,3 +119,4 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   page: number;
   limit: number;
 }
+

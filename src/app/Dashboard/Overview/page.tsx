@@ -220,25 +220,25 @@ export default function OverviewPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {user?.role === UserRole.ADMIN && (
+          {user?.role === UserRole.SUPER_ADMIN && (
             <QuickLink
-              href="/Dashboard/stores"
+              href="/Dashboard/Stores"
               label="Manage Stores"
               description="View and create stores"
             />
           )}
           <QuickLink
-            href="/Dashboard/products"
+            href="/Dashboard/Products"
             label="Products"
             description="View and manage inventory"
           />
           <QuickLink
-            href="/Dashboard/sell"
+            href="/Dashboard/Sell"
             label="New Sale"
             description="Process a new sale"
           />
           <QuickLink
-            href="/Dashboard/transactions"
+            href="/Dashboard/Transactions"
             label="Transactions"
             description="View recent activity"
           />
@@ -247,3 +247,5 @@ export default function OverviewPage() {
     </div>
   );
 }
+
+

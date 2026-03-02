@@ -2,15 +2,11 @@
 
 import Image from "next/image";
 import { useLogin } from "../_hooks/useLogin";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2Icon } from "lucide-react";
-import { use } from "react";
 
 export default function Login() {
-  const { formData, handleChange, handleSubmit, isPending, error, isSuccess } =
-    useLogin();
+  const { formData, handleChange, handleSubmit, isPending } = useLogin();
 
   return (
     <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
@@ -77,27 +73,6 @@ export default function Login() {
             <Button type="submit" disabled={isPending} className="w-full ">
               {isPending ? "Signing in..." : "Sign In"}
             </Button>
-
-            {error && (
-              <Alert variant="destructive" className="mt-4">
-                <CheckCircle2Icon />
-                <AlertTitle>Login Failed</AlertTitle>
-                <AlertDescription>
-                  Please check your credentials and try again.
-                </AlertDescription>
-              </Alert>
-            )}
-            {isSuccess && (
-              <Alert className="mt-4 border-green-600 bg-green-950 text-green-400 ">
-                <CheckCircle2Icon className="h-5 w-5 !text-green-500" />
-                <AlertTitle className="text-green-500">
-                  Login Successful
-                </AlertTitle>
-                <AlertDescription className="text-green-400">
-                  You have logged in successfully.
-                </AlertDescription>
-              </Alert>
-            )}
           </form>
         </div>
       </div>
