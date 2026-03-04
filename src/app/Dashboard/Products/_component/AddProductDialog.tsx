@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,15 +8,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
-
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useProductMutations } from "../_hooks/useProductMutations";
 import {
   Select,
   SelectContent,
@@ -23,109 +19,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { makingChargeTypes } from "@/schemas/product.schema";
+import { useProductDialogForm } from "../_hooks/useProductDialogForm";
+import { AddProductDialogProps } from "../_types/product-dialog.types";
 
-import { useState } from "react";
-import {
-  makingChargeTypes,
-  productSchema,
-  ProductFormValues,
-} from "@/schemas/product.schema";
-import { toast } from "sonner";
-
-type ApiErrorDetail = {
-  message?: string;
-};
-
-type ApiErrorPayload = {
-  message?: string;
-  error?: {
-    message?: string;
-    details?: ApiErrorDetail[];
-  };
-  details?: ApiErrorDetail[];
-};
-
-const getMutationErrorMessage = (error: unknown) => {
-  if (!error) return "";
-
-  const err = error as Error & { data?: unknown };
-  const payload = err.data as ApiErrorPayload | undefined;
-
-  const details = payload?.error?.details ?? payload?.details;
-  if (Array.isArray(details)) {
-    const detailMessage = details
-      .map((item) => item?.message)
-      .filter((msg): msg is string => Boolean(msg))
-      .join(" | ");
-
-    if (detailMessage) return detailMessage;
-  }
-
-  const nestedMessage = payload?.error?.message ?? payload?.message;
-  if (typeof nestedMessage === "string" && nestedMessage.trim()) {
-    return nestedMessage;
-  }
-
-  if (err instanceof Error && err.message && err.message !== "[object Object],[object Object]") {
-    return err.message;
-  }
-
-  return "Failed to add product.";
-};
-
-export default function AddProductDialog() {
+export default function AddProductDialog({
+  mode = "add",
+  product,
+  trigger,
+}: AddProductDialogProps) {
   const [open, setOpen] = useState(false);
-  const { createProduct } = useProductMutations();
-
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      sku: "",
-      category: "",
-      purity: "",
-      hsnCode: "",
-      makingChargeType: "PERCENTAGE",
-      makingCharge: 0,
-      gstRate: 3,
-      quantity: 0,
-    },
+  const { form, pending, isEditMode, onSubmit } = useProductDialogForm({
+    mode,
+    product,
+    open,
+    setOpen,
   });
 
-  const onSubmit = (data: ProductFormValues) => {
-    // Quantity is kept in UI for now, but backend contract does not accept it yet.
-    const { quantity, ...payload } = data;
+  const fallbackTrigger = useMemo(() => {
+    if (isEditMode) return <Button variant="outline">Edit</Button>;
 
-    createProduct.mutate(payload, {
-      onSuccess: () => {
-        toast.success("Product added successfully.");
-        setOpen(false);
-        form.reset();
-      },
-      onError: (error) => {
-        toast.error(getMutationErrorMessage(error));
-      },
-    });
-  };
+    return (
+      <Button>
+        <Plus className="h-4 w-4 mr-2" />
+        Add Product
+      </Button>
+    );
+  }, [isEditMode]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? fallbackTrigger}</DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Product</DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Product" : "Add Product"}</DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-4 pt-2"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-2">
             <Label>Name</Label>
             <Input {...form.register("name")} />
@@ -145,10 +76,7 @@ export default function AddProductDialog() {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Purity</Label>
-              <Input
-                placeholder="18K"
-                {...form.register("purity")}
-              />
+              <Input placeholder="18K" {...form.register("purity")} />
               <p className="text-sm text-destructive">
                 {form.formState.errors.purity?.message}
               </p>
@@ -238,12 +166,14 @@ export default function AddProductDialog() {
             Quantity is kept for now and will be sent after backend support is added.
           </p>
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={createProduct.isPending}
-          >
-            {createProduct.isPending ? "Adding..." : "Add Product"}
+          <Button type="submit" className="w-full" disabled={pending}>
+            {pending
+              ? isEditMode
+                ? "Updating..."
+                : "Adding..."
+              : isEditMode
+                ? "Update Product"
+                : "Add Product"}
           </Button>
         </form>
       </DialogContent>

@@ -1,40 +1,34 @@
 "use client";
 
-import { useProducts } from "./_hooks/useProducts";
-import { useProductMutations } from "./_hooks/useProductMutations";
-import ProductTable from "./_component/ProductTable";
 import AddProductDialog from "./_component/AddProductDialog";
+import ProductTable from "./_component/ProductTable";
+import { useProducts } from "./_hooks/useProducts";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
-import { toast } from "sonner";
-
-type ApiErrorPayload = {
-  message?: string;
-  error?: {
-    message?: string;
-  };
-};
-
-const getErrorMessage = (error: unknown) => {
-  const err = error as Error & { data?: unknown };
-  const payload = err?.data as ApiErrorPayload | undefined;
-  return (
-    payload?.error?.message ||
-    payload?.message ||
-    err?.message ||
-    "Operation failed. Please try again."
-  );
-};
+import ListControlsBar from "@/components/shared/ListControlsBar";
+import { useProductActions } from "./_hooks/useProductActions";
+import { useProductFiltersState } from "./_hooks/useProductFiltersState";
+import { useProductFilterControls } from "./_hooks/useProductFilterControls";
 
 export default function ProductsPage() {
-  const { data, isLoading } = useProducts();
-  const { deleteProduct, returnProduct } = useProductMutations();
-
   const user = getUser();
   const normalizedRole = user?.role?.toUpperCase();
   const isAdmin =
-    normalizedRole === UserRole.SUPER_ADMIN ||
-    normalizedRole === "ADMIN";
+    normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN";
+
+  const filters = useProductFiltersState();
+  const { data, isLoading } = useProducts(filters.queryParams);
+  const { selectControls } = useProductFilterControls({
+    products: data,
+    categoryFilter: filters.categoryFilter,
+    statusFilter: filters.statusFilter,
+    sortValue: filters.sortValue,
+    setCategoryFilter: filters.setCategoryFilter,
+    setStatusFilter: filters.setStatusFilter,
+    setSortValue: filters.setSortValue,
+  });
+
+  const { handleDeactivate, handleActivate, handleReturn } = useProductActions();
 
   return (
     <div className="space-y-6">
@@ -43,35 +37,23 @@ export default function ProductsPage() {
         <AddProductDialog />
       </div>
 
+      <ListControlsBar
+        searchValue={filters.searchInput}
+        onSearchValueChange={filters.setSearchInput}
+        searchPlaceholder="Search products by name or SKU..."
+        onReset={filters.resetFilters}
+        selectControls={selectControls}
+      />
+
       {isLoading ? (
         <p>Loading...</p>
       ) : (
         <ProductTable
           products={data}
           isAdmin={isAdmin}
-          onDelete={(id: string) =>
-            deleteProduct.mutate(id, {
-              onSuccess: () => {
-                toast.success("Product deleted successfully.");
-              },
-              onError: (error) => {
-                toast.error(getErrorMessage(error));
-              },
-            })
-          }
-          onReturn={(id: string) =>
-            returnProduct.mutate(
-              { id, qty: 1 },
-              {
-                onSuccess: () => {
-                  toast.success("Product returned successfully.");
-                },
-                onError: (error) => {
-                  toast.error(getErrorMessage(error));
-                },
-              },
-            )
-          }
+          onDeactivate={handleDeactivate}
+          onActivate={handleActivate}
+          onReturn={handleReturn}
         />
       )}
     </div>
