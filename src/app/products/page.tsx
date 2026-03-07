@@ -1,0 +1,1 @@
+//Here do all the product related work , If there is a page for details , inside this make a folder called details [inside this ], and if need to update then is should be inside this in the dynamic routing 
