@@ -36,3 +36,4 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 file struct.txt
+progress_report_file_structure.txt
