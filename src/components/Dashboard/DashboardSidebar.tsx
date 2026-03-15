@@ -5,9 +5,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BarChart3,
+  Boxes,
   Package,
   ShoppingCart,
   Store,
+  Tags,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -30,6 +32,8 @@ const routeIcons = {
   Overview: LayoutDashboard,
   Stores: Store,
   Orders: ShoppingCart,
+  Categories: Tags,
+  Inventory: Boxes,
   Products: Package,
   Sell: Wallet,
   Transactions: ReceiptText,

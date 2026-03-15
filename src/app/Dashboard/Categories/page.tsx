@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import AddProductDialog from "./_component/AddProductDialog";
-import ProductPagination from "./_component/ProductPagination";
-import ProductTable from "./_component/ProductTable";
-import { useProducts } from "./_hooks/useProducts";
-import { getUser } from "@/services/session.service";
-import { UserRole } from "@/types";
+import AddCategoryDialog from "./_component/AddCategoryDialog";
+import CategoryPagination from "./_component/CategoryPagination";
+import CategoryTable from "./_component/CategoryTable";
 import ListControlsBar from "@/components/shared/ListControlsBar";
-import { useProductActions } from "./_hooks/useProductActions";
-import { useProductFiltersState } from "./_hooks/useProductFiltersState";
-import { useProductFilterControls } from "./_hooks/useProductFilterControls";
+import { useCategoryActions } from "./_hooks/useCategoryActions";
+import { useCategoryFilterControls } from "./_hooks/useCategoryFilterControls";
+import { useCategoryFiltersState } from "./_hooks/useCategoryFiltersState";
+import { useCategories } from "./_hooks/useCategories";
 
 const buildPageNumbers = (currentPage: number, totalPages: number) => {
   if (totalPages <= 5) {
@@ -28,30 +25,16 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
   return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
 };
 
-export default function ProductsPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const user = getUser();
-    const normalizedRole = user?.role?.toUpperCase();
-    setIsAdmin(
-      normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
-    );
-  }, []);
-
-  const filters = useProductFiltersState();
-  const { data, isLoading } = useProducts(filters.queryParams);
-  const { selectControls } = useProductFilterControls({
-    products: data?.data,
-    categoryFilter: filters.categoryFilter,
+export default function CategoriesPage() {
+  const filters = useCategoryFiltersState();
+  const { data, isLoading } = useCategories(filters.queryParams);
+  const { selectControls } = useCategoryFilterControls({
     statusFilter: filters.statusFilter,
     sortValue: filters.sortValue,
-    setCategoryFilter: filters.setCategoryFilter,
     setStatusFilter: filters.setStatusFilter,
     setSortValue: filters.setSortValue,
   });
-
-  const { handleDeactivate, handleActivate, handleReturn } = useProductActions();
+  const { handleActivate, handleDeactivate } = useCategoryActions();
 
   const currentPage = data?.page ?? filters.page;
   const totalItems = data?.total ?? 0;
@@ -63,17 +46,15 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Products</h1>
-        <div className="flex items-center gap-2">
-          <AddProductDialog />
-        </div>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Categories</h1>
+        <AddCategoryDialog />
       </div>
 
       <ListControlsBar
         searchValue={filters.searchInput}
         onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search products by name or SKU..."
+        searchPlaceholder="Search categories by name or slug..."
         onReset={filters.resetFilters}
         selectControls={selectControls}
       />
@@ -82,14 +63,12 @@ export default function ProductsPage() {
         <p>Loading...</p>
       ) : (
         <div className="space-y-4">
-          <ProductTable
-            products={data?.data}
-            isAdmin={isAdmin}
+          <CategoryTable
+            categories={data?.data}
             onDeactivate={handleDeactivate}
             onActivate={handleActivate}
-            onReturn={handleReturn}
           />
-          <ProductPagination
+          <CategoryPagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}

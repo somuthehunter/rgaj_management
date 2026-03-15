@@ -1,16 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AddProductDialog from "./_component/AddProductDialog";
-import ProductPagination from "./_component/ProductPagination";
-import ProductTable from "./_component/ProductTable";
-import { useProducts } from "./_hooks/useProducts";
+import ListControlsBar from "@/components/shared/ListControlsBar";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
-import ListControlsBar from "@/components/shared/ListControlsBar";
-import { useProductActions } from "./_hooks/useProductActions";
-import { useProductFiltersState } from "./_hooks/useProductFiltersState";
-import { useProductFilterControls } from "./_hooks/useProductFilterControls";
+import { mockInventoryStores } from "@/services/inventory.service";
+import { useProducts } from "../Products/_hooks/useProducts";
+import InventoryTable from "./_component/InventoryTable";
+import InventoryPagination from "./_component/InventoryPagination";
+import InventoryDistributeDialog from "./_component/InventoryDistributeDialog";
+import { useInventory } from "./_hooks/useInventory";
+import { useInventoryFiltersState } from "./_hooks/useInventoryFiltersState";
+import { useInventoryFilterControls } from "./_hooks/useInventoryFilterControls";
 
 const buildPageNumbers = (currentPage: number, totalPages: number) => {
   if (totalPages <= 5) {
@@ -28,8 +29,9 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
   return [1, currentPage - 1, currentPage, currentPage + 1, totalPages];
 };
 
-export default function ProductsPage() {
+export default function InventoryPage() {
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userStoreId, setUserStoreId] = useState("");
 
   useEffect(() => {
     const user = getUser();
@@ -37,21 +39,28 @@ export default function ProductsPage() {
     setIsAdmin(
       normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
     );
+    setUserStoreId(user?.storeId ?? "");
   }, []);
 
-  const filters = useProductFiltersState();
-  const { data, isLoading } = useProducts(filters.queryParams);
-  const { selectControls } = useProductFilterControls({
-    products: data?.data,
-    categoryFilter: filters.categoryFilter,
-    statusFilter: filters.statusFilter,
-    sortValue: filters.sortValue,
-    setCategoryFilter: filters.setCategoryFilter,
-    setStatusFilter: filters.setStatusFilter,
-    setSortValue: filters.setSortValue,
+  const filters = useInventoryFiltersState({
+    isAdmin,
+    userStoreId,
   });
 
-  const { handleDeactivate, handleActivate, handleReturn } = useProductActions();
+  const { data, isLoading } = useInventory(filters.queryParams);
+  const productsQuery = useProducts({ page: 1, limit: 100 });
+
+  const { selectControls } = useInventoryFilterControls({
+    inventory: data?.data,
+    stores: mockInventoryStores,
+    isAdmin,
+    selectedStoreId: filters.storeFilter,
+    selectedCategory: filters.categoryFilter,
+    sortValue: filters.sortValue,
+    setStoreFilter: filters.setStoreFilter,
+    setCategoryFilter: filters.setCategoryFilter,
+    setSortValue: filters.setSortValue,
+  });
 
   const currentPage = data?.page ?? filters.page;
   const totalItems = data?.total ?? 0;
@@ -63,17 +72,20 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between">
-        <h1 className="text-2xl font-bold">Products</h1>
-        <div className="flex items-center gap-2">
-          <AddProductDialog />
-        </div>
+      <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
+        <h1 className="text-2xl font-bold">Inventory</h1>
+        {isAdmin && (
+          <InventoryDistributeDialog
+            products={productsQuery.data?.data}
+            stores={mockInventoryStores}
+          />
+        )}
       </div>
 
       <ListControlsBar
         searchValue={filters.searchInput}
         onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search products by name or SKU..."
+        searchPlaceholder="Search inventory by product, SKU, or store..."
         onReset={filters.resetFilters}
         selectControls={selectControls}
       />
@@ -82,14 +94,8 @@ export default function ProductsPage() {
         <p>Loading...</p>
       ) : (
         <div className="space-y-4">
-          <ProductTable
-            products={data?.data}
-            isAdmin={isAdmin}
-            onDeactivate={handleDeactivate}
-            onActivate={handleActivate}
-            onReturn={handleReturn}
-          />
-          <ProductPagination
+          <InventoryTable inventory={data?.data} />
+          <InventoryPagination
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
