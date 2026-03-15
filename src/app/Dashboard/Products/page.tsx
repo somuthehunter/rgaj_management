@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AddProductDialog from "./_component/AddProductDialog";
+import DistributeDialog from "./_component/DistributeDialog";
 import ProductPagination from "./_component/ProductPagination";
 import ProductTable from "./_component/ProductTable";
 import { useProducts } from "./_hooks/useProducts";
@@ -28,10 +30,15 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 };
 
 export default function ProductsPage() {
-  const user = getUser();
-  const normalizedRole = user?.role?.toUpperCase();
-  const isAdmin =
-    normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN";
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const user = getUser();
+    const normalizedRole = user?.role?.toUpperCase();
+    setIsAdmin(
+      normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
+    );
+  }, []);
 
   const filters = useProductFiltersState();
   const { data, isLoading } = useProducts(filters.queryParams);
@@ -59,7 +66,10 @@ export default function ProductsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Products</h1>
-        <AddProductDialog />
+        <div className="flex items-center gap-2">
+          {isAdmin && <DistributeDialog products={data?.data} />}
+          <AddProductDialog />
+        </div>
       </div>
 
       <ListControlsBar
