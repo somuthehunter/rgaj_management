@@ -108,14 +108,18 @@ export default function ProductTable({
   ];
 
   return (
-    <DataTable
-      data={products}
-      columns={columns}
-      getRowKey={(product) => product.id}
-      getRowClassName={(product) =>
-        !isProductActive(product) ? "opacity-55" : undefined
-      }
-      emptyMessage="No products found."
-    />
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-[720px]">
+        <DataTable
+          data={products}
+          columns={columns}
+          getRowKey={(product) => product.id}
+          getRowClassName={(product) =>
+            !isProductActive(product) ? "opacity-55" : undefined
+          }
+          emptyMessage="No products found."
+        />
+      </div>
+    </div>
   );
 }

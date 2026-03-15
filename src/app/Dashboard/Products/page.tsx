@@ -64,7 +64,7 @@ export default function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between">
         <h1 className="text-2xl font-bold">Products</h1>
         <div className="flex items-center gap-2">
           {isAdmin && <DistributeDialog products={data?.data} />}
