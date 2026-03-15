@@ -7,48 +7,63 @@ import {
 import endpoints from "@/constants/query_const";
 import { ProductSearchParams } from "@/types/product";
 
+const buildProductsQuery = (params?: ProductSearchParams) => {
+  const query = new URLSearchParams();
+
+  if (params?.page) {
+    query.set("page", String(params.page));
+  }
+
+  if (params?.limit) {
+    query.set("limit", String(params.limit));
+  }
+
+  if (params?.category) {
+    query.set("category", params.category);
+  }
+
+  if (params?.purity) {
+    query.set("purity", params.purity);
+  }
+
+  if (typeof params?.isActive === "boolean") {
+    query.set("isActive", String(params.isActive));
+  }
+
+  if (params?.sortBy) {
+    query.set("sortBy", params.sortBy);
+  }
+
+  if (params?.sortOrder) {
+    query.set("sortOrder", params.sortOrder);
+  }
+
+  if (params?.sortBy && params?.sortOrder) {
+    query.set("sort", `${params.sortBy}:${params.sortOrder}`);
+  }
+
+  return query.toString();
+};
+
 export const productService = {
-  getAll: () => getService(endpoints.products.getAll),
+  getAll: (params?: ProductSearchParams) => {
+    const query = buildProductsQuery(params);
+    const endPoint = query
+      ? `${endpoints.products.getAll}?${query}`
+      : endpoints.products.getAll;
+
+    return getService(endPoint);
+  },
 
   search: (params: ProductSearchParams) => {
-    const query = new URLSearchParams();
+    const query = buildProductsQuery(params);
+    const searchQuery = new URLSearchParams(query);
 
     if (params.search) {
-      query.set("query", params.search);
-      query.set("q", params.search);
+      searchQuery.set("q", params.search);
     }
 
-    if (params.category) {
-      query.set("category", params.category);
-    }
-
-    if (params.status === "active") {
-      query.set("isActive", "true");
-      query.set("status", "ACTIVE");
-    }
-
-    if (params.status === "deactivated") {
-      query.set("isActive", "false");
-      query.set("status", "INACTIVE");
-    }
-
-    if (params.sortBy) {
-      query.set("sortBy", params.sortBy);
-    }
-
-    if (params.sortOrder) {
-      query.set("sortOrder", params.sortOrder);
-    }
-
-    if (params.sortBy && params.sortOrder) {
-      query.set("sort", `${params.sortBy}:${params.sortOrder}`);
-    }
-
-    const q = query.toString();
-    const endPoint = q
-      ? `${endpoints.products.search}?${q}`
-      : endpoints.products.search;
-
+    const endPoint = `${endpoints.products.search}?${searchQuery.toString()}`;
     return getService(endPoint);
   },
 

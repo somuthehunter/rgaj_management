@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { productService } from "@/services/product.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
 import { getUser } from "@/services/session.service";
-import { ApiResponse } from "@/types";
+import { ApiResponse, PaginatedResponse } from "@/types";
 import { ProductListItem, ProductSearchParams } from "@/types/product";
 
 export const useProducts = (params?: ProductSearchParams) => {
@@ -12,35 +12,61 @@ export const useProducts = (params?: ProductSearchParams) => {
 
   const search = params?.search?.trim() ?? "";
   const category = params?.category ?? "";
-  const status = params?.status ?? "";
+  const purity = params?.purity ?? "";
+  const isActive = params?.isActive;
   const sortBy = params?.sortBy ?? "";
   const sortOrder = params?.sortOrder ?? "";
+  const page = params?.page ?? 1;
+  const limit = params?.limit ?? 10;
 
-  const hasSearchParams = Boolean(
-    search || category || status || sortBy || sortOrder,
-  );
-
-  return useQuery<ProductListItem[]>({
+  return useQuery<PaginatedResponse<ProductListItem>>({
     queryKey: [
       QUERY_KEYS.PRODUCTS,
       user?.storeId,
       search,
       category,
-      status,
+      purity,
+      isActive,
       sortBy,
       sortOrder,
+      page,
+      limit,
     ],
     queryFn: async () => {
-      const res = (hasSearchParams
-        ? await productService.search({
-            search,
-            category,
-            status,
-            sortBy,
-            sortOrder,
-          })
-        : await productService.getAll()) as ApiResponse<ProductListItem[]>;
-      return res.data;
+      const requestParams = {
+        search,
+        category,
+        purity,
+        isActive,
+        sortBy,
+        sortOrder,
+        page,
+        limit,
+      };
+
+      const res = await (search
+        ? productService.search(requestParams)
+        : productService.getAll(requestParams)) as
+        | ApiResponse<ProductListItem[]>
+        | PaginatedResponse<ProductListItem>;
+
+      const normalizedData = Array.isArray(res.data) ? res.data : [];
+      const normalizedPage =
+        "page" in res && typeof res.page === "number" ? res.page : page;
+      const normalizedLimit =
+        "limit" in res && typeof res.limit === "number" ? res.limit : limit;
+      const normalizedTotal =
+        "total" in res && typeof res.total === "number"
+          ? res.total
+          : normalizedData.length;
+
+      return {
+        ...(res as ApiResponse<ProductListItem[]>),
+        data: normalizedData,
+        page: normalizedPage,
+        limit: normalizedLimit,
+        total: normalizedTotal,
+      };
     },
   });
 };

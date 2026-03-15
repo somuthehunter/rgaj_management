@@ -11,6 +11,7 @@ import {
 } from "../_types/product-controls.types";
 
 export const useProductFiltersState = () => {
+  const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -32,12 +33,23 @@ export const useProductFiltersState = () => {
       search: debouncedSearch,
       category: categoryFilter === "all" ? "" : categoryFilter,
       status: statusFilter === "all" ? "" : statusFilter,
+      isActive:
+        statusFilter === "all"
+          ? undefined
+          : statusFilter === "active",
       sortBy: sortConfig?.sortBy,
       sortOrder: sortConfig?.sortOrder ?? "",
+      page,
+      limit: 10,
     };
+  }, [debouncedSearch, categoryFilter, statusFilter, sortValue, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [debouncedSearch, categoryFilter, statusFilter, sortValue]);
 
   const resetFilters = () => {
+    setPage(1);
     setSearchInput("");
     setDebouncedSearch("");
     setCategoryFilter("all");
@@ -47,10 +59,12 @@ export const useProductFiltersState = () => {
 
   return {
     searchInput,
+    page,
     categoryFilter,
     statusFilter,
     sortValue,
     queryParams,
+    setPage,
     setSearchInput,
     setCategoryFilter,
     setStatusFilter,

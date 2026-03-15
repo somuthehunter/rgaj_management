@@ -34,7 +34,11 @@ export type ProductSearchStatus = "active" | "deactivated" | "";
 export type ProductSearchParams = {
   search?: string;
   category?: string;
+  purity?: string;
   status?: ProductSearchStatus;
+  isActive?: boolean;
   sortBy?: string;
   sortOrder?: "asc" | "desc" | "";
+  page?: number;
+  limit?: number;
 };
