@@ -1,0 +1,122 @@
+PROJECT STRUCTURE GUIDE
+
+Project root: rgaj_management
+
+.
+|- public/
+|  |- images/
+|  |  |- hero.jpg, hero.png
+|  |- next.svg, vercel.svg
+|  Purpose: Static assets served directly by Next.js.
+|
+|- src/
+|  |- app/
+|  |  |- layout.tsx
+|  |  |- providers.tsx
+|  |  |- globals.css
+|  |  |- page.tsx
+|  |  Purpose: Next.js App Router entry, global layout/providers, global styles.
+|  |
+|  |  |- login/
+|  |  |  |- page.tsx
+|  |  |  |- _component/login.tsx
+|  |  |  |- _hooks/useLogin.ts
+|  |  |  Purpose: Login route. TSX in component, login handlers/state in hook.
+|  |
+|  |  |- Dashboard/
+|  |     |- layout.tsx
+|  |     |- page.tsx
+|  |     |- _component/dashboard.tsx
+|  |     Purpose: Dashboard shell and route composition.
+|  |
+|  |     |- Overview/
+|  |     |  |- page.tsx
+|  |     |  |- _hooks/useOverview.ts
+|  |     |  Purpose: Dashboard overview screen and data hook.
+|  |
+|  |     |- Products/
+|  |        |- page.tsx
+|  |        |- _component/
+|  |        |  |- AddProductDialog.tsx
+|  |        |  |- ProductTable.tsx
+|  |        |  |- DistributeDialog.tsx
+|  |        |- _hooks/
+|  |        |  |- useProducts.ts
+|  |        |  |- useProductMutations.ts
+|  |        |  |- useProductActions.ts
+|  |        |  |- useProductDialogForm.ts
+|  |        |  |- useProductFiltersState.ts
+|  |        |  |- useProductFilterControls.ts
+|  |        |- _constants/product-controls.ts
+|  |        |- _types/
+|  |        |  |- product-controls.types.ts
+|  |        |  |- product-dialog.types.ts
+|  |        |  |- product-table.types.ts
+|  |        |- _utils/product.utils.ts
+|  |        Purpose: Feature-first module.
+|  |        - page.tsx: layout/composition only.
+|  |        - _component: presentational TSX.
+|  |        - _hooks: feature logic, handlers, state, mutations.
+|  |        - _constants: UI control option maps.
+|  |        - _types: feature-local types.
+|  |        - _utils: helper functions (error mapping, active-status resolver, defaults).
+|
+|  |- components/
+|  |  |- ui/
+|  |  |  Purpose: shadcn UI primitives (Button, Input, Dialog, Select, Table, etc).
+|  |  |
+|  |  |- Dashboard/
+|  |  |  |- DashboardSidebar.tsx
+|  |  |  |- NavLink.tsx
+|  |  |  Purpose: shared dashboard navigation UI.
+|  |  |
+|  |  |- shared/
+|  |     |- ListControlsBar.tsx
+|  |     Purpose: reusable feature-agnostic list controls (search/filter/sort + reset).
+|
+|  |- services/
+|  |  |- service.ts
+|  |  |- config.ts
+|  |  |- auth.service.ts
+|  |  |- session.service.ts
+|  |  |- product.service.ts
+|  |  |- store.service.ts
+|  |  |- stats.service.ts
+|  |  Purpose: API layer. Endpoint calls, auth headers, request/response handling.
+|
+|  |- schemas/
+|  |  |- auth.schema.ts
+|  |  |- product.schema.ts
+|  |  Purpose: zod schemas + form validation rules.
+|
+|  |- constants/
+|  |  |- query_const.ts
+|  |  |- query_keys.ts
+|  |  Purpose: API endpoint constants and React Query keys.
+|
+|  |- routes/
+|  |  |- index.ts
+|  |  |- protected-routes.ts
+|  |  Purpose: route metadata and protected navigation config.
+|
+|  |- lib/
+|  |  |- utils.ts
+|  |  Purpose: generic utility functions (className helpers, etc).
+|
+|  |- types/
+|     |- index.ts
+|     |- product.ts
+|     Purpose: shared TypeScript contracts used across modules.
+|
+|- file struct.txt
+|  Purpose: existing reference file (left untouched).
+|
+|- project_file_structure_guide.txt
+|  Purpose: this guide file.
+
+ARCHITECTURE STYLE USED
+- Page/component files focus on TSX structure and composition.
+- Business logic and handlers live in dedicated hooks.
+- Types are extracted to dedicated types files.
+- API details stay in services.
+- Reusable UI controls are shared under components/shared.

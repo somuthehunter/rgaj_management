@@ -1,0 +1,93 @@
+DATA TABLE USAGE GUIDE
+
+Location:
+- Shared reusable table: src/components/shared/DataTable.tsx
+- Low-level UI primitive: src/components/ui/table.tsx
+
+When to use which:
+- Use `DataTable.tsx` when a page needs a standard reusable table driven by `data` and `columns`.
+- Use `ui/table.tsx` only when you need a custom table layout that does not fit the `DataTable` pattern.
+
+Why both exist:
+- `ui/table.tsx` is the presentational base layer.
+- `DataTable.tsx` is the reusable app-level abstraction built on top of that base layer.
+
+How to use DataTable:
+
+1. Import the shared table
+
+import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
+
+2. Define your row type
+
+type ExampleRow = {
+  id: string;
+  name: string;
+  status: string;
+};
+
+3. Define columns
+
+const columns: DataTableColumn<ExampleRow>[] = [
+  {
+    id: "name",
+    header: "Name",
+    cell: (row) => row.name,
+  },
+  {
+    id: "status",
+    header: "Status",
+    cell: (row) => row.status,
+  },
+];
+
+4. Render the table
+
+<DataTable
+  data={rows}
+  columns={columns}
+  getRowKey={(row) => row.id}
+  emptyMessage="No records found."
+/>
+
+Available props in DataTable:
+- `data`
+  Array of rows to display.
+- `columns`
+  Array of column definitions.
+- `getRowKey`
+  Required. Returns a unique key for each row.
+- `getRowClassName`
+  Optional. Use this when row styling depends on row data.
+- `emptyMessage`
+  Optional. Message shown when there is no data.
+
+Available fields in each column:
+- `id`
+  Unique column id.
+- `header`
+  Header label or custom React node.
+- `cell`
+  Function that returns cell content for a row.
+- `headerClassName`
+  Optional className for the header cell.
+- `cellClassName`
+  Optional className for each body cell in that column.
+
+Recommended pattern in this project:
+- Keep feature-specific table configuration inside the feature folder.
+- Keep reusable table rendering logic inside `src/components/shared`.
+
+Current example in this project:
+- Feature wrapper: src/app/Dashboard/Products/_component/ProductTable.tsx
+- Shared renderer: src/components/shared/DataTable.tsx
+
+Recommended workflow for new pages:
+- Create a page-specific wrapper like `OrdersTable.tsx` or `StoresTable.tsx`.
+- Inside that wrapper, define the row type and `columns`.
+- Pass the page data into `DataTable`.
+- Keep page-specific actions, badges, buttons, and dialogs inside the wrapper, not inside `DataTable`.
+
+Important rule:
+- Do not put product-specific, order-specific, or page-specific business logic into `DataTable.tsx`.
+- `DataTable.tsx` should stay generic so it can be reused across multiple pages.

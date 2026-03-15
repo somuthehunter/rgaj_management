@@ -1,0 +1,188 @@
+PROGRESS REPORT - CURRENT FILE STRUCTURE
+
+Project root: rgaj_management
+
+Migration context:
+- Original frontend was generated in React using Lovable.
+- Current work is being mapped and adapted into a Next.js App Router project.
+- Progress till now reflects the files already created and reorganized inside this Next.js codebase.
+
+.
+|- public/
+|  |- images/
+|  |  |- hero.jpg
+|  |  |- hero.png
+|  |- next.svg
+|  |- vercel.svg
+|  Progress: Static assets are available and already placed under public.
+|
+|- src/
+|  |- app/
+|  |  |- favicon.ico
+|  |  |- globals.css
+|  |  |- layout.tsx
+|  |  |- page.tsx
+|  |  |- providers.tsx
+|  |  Progress: Base Next.js App Router setup is in place.
+|  |
+|  |  |- login/
+|  |  |  |- page.tsx
+|  |  |  |- _component/
+|  |  |  |  |- login.tsx
+|  |  |  |- _hooks/
+|  |  |     |- useLogin.ts
+|  |  |  Progress: Login route has been separated into page, component, and hook layers.
+|  |
+|  |  |- Dashboard/
+|  |  |  |- layout.tsx
+|  |  |  |- page.tsx
+|  |  |  |- _component/
+|  |  |     |- dashboard.tsx
+|  |  |  Progress: Dashboard shell and route-level composition are created.
+|  |  |
+|  |  |  |- Overview/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _hooks/
+|  |  |  |     |- useOverview.ts
+|  |  |  |  Progress: Overview page exists with a dedicated logic hook.
+|  |  |
+|  |  |  |- Products/
+|  |  |     |- page.tsx
+|  |  |     |- _component/
+|  |  |     |  |- AddProductDialog.tsx
+|  |  |     |  |- DistributeDialog.tsx
+|  |  |     |  |- ProductTable.tsx
+|  |  |     |- _constants/
+|  |  |     |  |- product-controls.ts
+|  |  |     |- _hooks/
+|  |  |     |  |- useProductActions.ts
+|  |  |     |  |- useProductDialogForm.ts
+|  |  |     |  |- useProductFilterControls.ts
+|  |  |     |  |- useProductFiltersState.ts
+|  |  |     |  |- useProductMutations.ts
+|  |  |     |  |- useProducts.ts
+|  |  |     |- _types/
+|  |  |     |  |- product-controls.types.ts
+|  |  |     |  |- product-dialog.types.ts
+|  |  |     |  |- product-table.types.ts
+|  |  |     |- _utils/
+|  |  |        |- product.utils.ts
+|  |  |     Progress: Products module is the most structured feature so far, with separated UI, hooks, constants, types, and utilities. Its feature table now uses the shared generic DataTable renderer.
+|
+|  |- components/
+|  |  |- Dashboard/
+|  |  |  |- DashboardSidebar.tsx
+|  |  |  |- NavLink.tsx
+|  |  |  Progress: Shared dashboard navigation components are available, and the sidebar now supports default-collapsed behavior with improved small-screen responsiveness.
+|  |  |
+|  |  |- shared/
+|  |  |  |- ListControlsBar.tsx
+|  |  |  |- DataTable.tsx
+|  |  |  |- DataTable_usage.txt
+|  |  |  Progress: Reusable shared components now include feature-agnostic list controls, a generic data table, and a usage guide for future developers.
+|  |  |
+|  |  |- ui/
+|  |     |- accordion.tsx
+|  |     |- alert-dialog.tsx
+|  |     |- alert.tsx
+|  |     |- aspect-ratio.tsx
+|  |     |- avatar.tsx
+|  |     |- badge.tsx
+|  |     |- breadcrumb.tsx
+|  |     |- button.tsx
+|  |     |- calendar.tsx
+|  |     |- card.tsx
+|  |     |- carousel.tsx
+|  |     |- chart.tsx
+|  |     |- checkbox.tsx
+|  |     |- collapsible.tsx
+|  |     |- command.tsx
+|  |     |- context-menu.tsx
+|  |     |- dialog.tsx
+|  |     |- drawer.tsx
+|  |     |- dropdown-menu.tsx
+|  |     |- form.tsx
+|  |     |- hover-card.tsx
+|  |     |- input-otp.tsx
+|  |     |- input.tsx
+|  |     |- label.tsx
+|  |     |- menubar.tsx
+|  |     |- navigation-menu.tsx
+|  |     |- pagination.tsx
+|  |     |- popover.tsx
+|  |     |- progress.tsx
+|  |     |- radio-group.tsx
+|  |     |- resizable.tsx
+|  |     |- scroll-area.tsx
+|  |     |- select.tsx
+|  |     |- separator.tsx
+|  |     |- sheet.tsx
+|  |     |- sidebar.tsx
+|  |     |- skeleton.tsx
+|  |     |- slider.tsx
+|  |     |- sonner.tsx
+|  |     |- switch.tsx
+|  |     |- table.tsx
+|  |     |- tabs.tsx
+|  |     |- textarea.tsx
+|  |     |- toast.tsx
+|  |     |- toaster.tsx
+|  |     |- toggle-group.tsx
+|  |     |- toggle.tsx
+|  |     |- tooltip.tsx
+|  |     |- ui_components.md
+|  |     |- use-toast.ts
+|  |     Progress: Core reusable UI primitives are already present.
+|
+|  |- constants/
+|  |  |- query_const.ts
+|  |  |- query_keys.ts
+|  |  Progress: API endpoint/query key constants are set up.
+|
+|  |- lib/
+|  |  |- utils.ts
+|  |  Progress: Shared utility layer exists.
+|
+|  |- routes/
+|  |  |- index.ts
+|  |  |- protected-routes.ts
+|  |  Progress: Route metadata and protection config are defined.
+|
+|  |- schemas/
+|  |  |- auth.schema.ts
+|  |  |- product.schema.ts
+|  |  Progress: Validation schemas are created for auth and product flows.
+|
+|  |- services/
+|  |  |- auth.service.ts
+|  |  |- config.ts
+|  |  |- product.service.ts
+|  |  |- service.ts
+|  |  |- session.service.ts
+|  |  |- stats.service.ts
+|  |  |- store.service.ts
+|  |  Progress: Service/API layer is already separated from UI code.
+|
+|  |- types/
+|     |- index.ts
+|     |- product.ts
+|     Progress: Shared TypeScript contracts exist.
+|
+|- file struct.txt
+|  Progress: Older reference structure file is still present.
+|
+|- project_file_structure_guide.txt
+|  Progress: Target/guide structure definition exists.
+|
+|- progress_report_file_structure.txt
+   Progress: This file records the current migration progress.
+
+CURRENT MIGRATION SUMMARY
+- Next.js App Router foundation is established.
+- Login, Dashboard, Overview, and Products routes are already mapped.
+- Products feature is the most complete and modularized section so far.
+- Shared table rendering has been extracted into a reusable `DataTable` component for use across multiple pages.
+- A developer usage note has been added for the shared table so future contributors can follow the same pattern.
+- Dashboard sidebar behavior has been improved for small screens and now defaults to a collapsed icon-first state.
+- Shared UI, schemas, services, constants, routes, and types are already separated into dedicated folders.
+- The project is actively being converted from a Lovable-generated React frontend into a more organized Next.js structure.
