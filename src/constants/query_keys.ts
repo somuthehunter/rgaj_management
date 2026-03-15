@@ -3,6 +3,7 @@ export const QUERY_KEYS = {
   STATISTICS: "statistics",
   STORES: "stores",
   CATEGORIES: "categories",
+  INVENTORY: "inventory",
   PRODUCTS: "products",
   ORDERS: "orders",
   TRANSACTIONS: "transactions",

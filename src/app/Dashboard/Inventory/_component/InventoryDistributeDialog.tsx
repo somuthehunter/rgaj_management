@@ -19,32 +19,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Boxes } from "lucide-react";
-import { ProductListItem } from "@/types/product";
 import { toast } from "sonner";
+import { Store } from "@/types";
+import { ProductListItem } from "@/types/product";
+import { InventoryMeasurementUnit } from "@/types/inventory";
 
-type DistributeDialogProps = {
+type InventoryDistributeDialogProps = {
   products?: ProductListItem[];
+  stores: Store[];
 };
 
-const mockStores = [
-  { id: "store-1", name: "Main Showroom" },
-  { id: "store-2", name: "City Branch" },
-  { id: "store-3", name: "Mall Branch" },
-];
-
-export default function DistributeDialog({
+export default function InventoryDistributeDialog({
   products = [],
-}: DistributeDialogProps) {
+  stores,
+}: InventoryDistributeDialogProps) {
   const [open, setOpen] = useState(false);
   const [productId, setProductId] = useState("");
   const [storeId, setStoreId] = useState("");
   const [quantityNumber, setQuantityNumber] = useState("");
   const [measuredQuantity, setMeasuredQuantity] = useState("");
-  const [measurementUnit, setMeasurementUnit] = useState<"ratti" | "carat">(
-    "ratti",
-  );
+  const [measurementUnit, setMeasurementUnit] =
+    useState<InventoryMeasurementUnit>("ratti");
 
-  const activeProducts = useMemo(
+  const productOptions = useMemo(
     () =>
       products.filter(
         (product) =>
@@ -65,7 +62,6 @@ export default function DistributeDialog({
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     toast.info("Distribution UI is ready. API integration will be added later.");
     setOpen(false);
     resetForm();
@@ -76,9 +72,7 @@ export default function DistributeDialog({
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
-        if (!nextOpen) {
-          resetForm();
-        }
+        if (!nextOpen) resetForm();
       }}
     >
       <DialogTrigger asChild>
@@ -90,7 +84,7 @@ export default function DistributeDialog({
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Distribute Product</DialogTitle>
+          <DialogTitle>Distribute Product To Store</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
@@ -101,7 +95,7 @@ export default function DistributeDialog({
                 <SelectValue placeholder="Choose a product" />
               </SelectTrigger>
               <SelectContent>
-                {activeProducts.map((product) => (
+                {productOptions.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.name}
                   </SelectItem>
@@ -117,16 +111,13 @@ export default function DistributeDialog({
                 <SelectValue placeholder="Choose a store" />
               </SelectTrigger>
               <SelectContent>
-                {mockStores.map((store) => (
+                {stores.map((store) => (
                   <SelectItem key={store.id} value={store.id}>
                     {store.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              Mock store options are being used until the distribution API is ready.
-            </p>
           </div>
 
           <div className="space-y-2">
@@ -147,7 +138,7 @@ export default function DistributeDialog({
               <Select
                 value={measurementUnit}
                 onValueChange={(value) =>
-                  setMeasurementUnit(value as "ratti" | "carat")
+                  setMeasurementUnit(value as InventoryMeasurementUnit)
                 }
               >
                 <SelectTrigger>
