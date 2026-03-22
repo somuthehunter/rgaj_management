@@ -6,5 +6,6 @@ export const QUERY_KEYS = {
   INVENTORY: "inventory",
   PRODUCTS: "products",
   ORDERS: "orders",
+  CUSTOMERS: "customers",
   TRANSACTIONS: "transactions",
 };
