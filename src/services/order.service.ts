@@ -317,3 +317,8 @@ export const getMockOrdersSnapshot = () =>
     customer: { ...order.customer },
     items: order.items.map((item) => ({ ...item })),
   }));
+
+export const addMockOrder = (order: OrderListItem) => {
+  mockOrders = [order, ...mockOrders];
+  return order;
+};

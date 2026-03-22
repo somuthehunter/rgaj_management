@@ -126,3 +126,8 @@ export const transactionService = {
     return buildPaginatedResponse(rows, params.page, params.limit);
   },
 };
+
+export const addMockTransaction = (transaction: TransactionLogItem) => {
+  mockTransactions = [transaction, ...mockTransactions];
+  return transaction;
+};
