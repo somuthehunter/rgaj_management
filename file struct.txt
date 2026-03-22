@@ -1,104 +1,154 @@
 src/
-│
-├── app/
-│   │
-│   ├── layout.tsx
-│   ├── providers.tsx
-│   ├── globals.css
-│   │
-│   ├── page.tsx
-│   │
-│   ├── login/
-│   │   ├── page.tsx
-│   │   ├── _component/
-│   │   │   └── login.tsx
-│   │   └── _hooks/
-│   │       └── useLogin.ts
-│   │
-│   ├── Dashboard/
-│   │   ├── layout.tsx              ← sidebar + route protection
-│   │   ├── page.tsx                ← redirect to overview
-│   │   │
-│   │   ├── overview/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   ├── stores/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   ├── orders/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   ├── products/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   ├── sell/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   ├── transactions/
-│   │   │   ├── page.tsx
-│   │   │   ├── _component/
-│   │   │   └── _hooks/
-│   │   │
-│   │   └── statistics/
-│   │       ├── page.tsx
-│   │       ├── _component/
-│   │       └── _hooks/
-│
-├── components/
-│   │
-│   ├── ui/                      ← shadcn components
-│   │   ├── alert.tsx
-│   │   ├── button.tsx
-│   │   ├── input.tsx
-│   │   ├── table.tsx
-│   │   ├── dialog.tsx
-│   │   ├── card.tsx
-│   │   ├── select.tsx
-│   │   ├── badge.tsx
-│   │   └── tabs.tsx
-│   │
-│   └── dashboard/
-│       ├── DashboardSidebar.tsx
-│       ├── NavItem.tsx
-│       └── RoleGuard.tsx
-│
-├── services/
-│   ├── config.ts
-│   ├── service.ts
-│   ├── auth.service.ts
-│   ├── session.service.ts
-│   ├── store.service.ts
-│   ├── product.service.ts
-│   ├── order.service.ts
-│   ├── transaction.service.ts
-│   └── statistics.service.ts
-│
-├── schemas/
-│   ├── auth.schema.ts
-│   ├── store.schema.ts
-│   ├── product.schema.ts
-│   ├── order.schema.ts
-│   └── sell.schema.ts
-│
-├── routes/
-│   ├── index.ts
-│   └── protected-routes.ts
-│
-├── constants/
-│   └── query_const.ts
-│
-├── lib/
-│   └── utils.ts
-│
-└── types/
-    └── index.ts
+|
+|-- app/
+|   |
+|   |-- layout.tsx
+|   |-- providers.tsx
+|   |-- globals.css
+|   |-- page.tsx
+|   |
+|   |-- login/
+|   |   |-- page.tsx
+|   |   |-- _component/
+|   |   |   `-- login.tsx
+|   |   `-- _hooks/
+|   |       `-- useLogin.ts
+|   |
+|   `-- Dashboard/
+|       |-- layout.tsx              <- sidebar + route protection
+|       |-- page.tsx                <- dashboard entry
+|       |-- _component/
+|       |   `-- dashboard.tsx
+|       |
+|       |-- Overview/
+|       |   |-- page.tsx
+|       |   `-- _hooks/
+|       |       `-- useOverview.ts
+|       |
+|       |-- Products/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Categories/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Inventory/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   `-- _types/
+|       |
+|       |-- Orders/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Customers/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Transactions/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Sell/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       |-- Stores/
+|       |   |-- page.tsx
+|       |   |-- _component/
+|       |   |-- _constants/
+|       |   |-- _hooks/
+|       |   |-- _types/
+|       |   `-- _utils/
+|       |
+|       `-- Users/
+|           |-- page.tsx
+|           |-- _component/
+|           |-- _constants/
+|           |-- _hooks/
+|           |-- _types/
+|           `-- _utils/
+|
+|-- components/
+|   |
+|   |-- ui/                         <- shadcn components
+|   |-- Dashboard/
+|   |   |-- DashboardSidebar.tsx
+|   |   `-- NavLink.tsx
+|   `-- shared/
+|       |-- DataTable.tsx
+|       |-- DataTable_usage.txt
+|       `-- ListControlsBar.tsx
+|
+|-- services/
+|   |-- auth.service.ts
+|   |-- billing.service.ts
+|   |-- category.service.ts
+|   |-- config.ts
+|   |-- customer.service.ts
+|   |-- inventory.service.ts
+|   |-- order.service.ts
+|   |-- product.service.ts
+|   |-- service.ts
+|   |-- session.service.ts
+|   |-- stats.service.ts
+|   |-- store.service.ts
+|   |-- transaction.service.ts
+|   `-- user.service.ts
+|
+|-- schemas/
+|   |-- auth.schema.ts
+|   |-- bill.schema.ts
+|   |-- category.schema.ts
+|   |-- product.schema.ts
+|   |-- store.schema.ts
+|   `-- user.schema.ts
+|
+|-- routes/
+|   |-- index.ts
+|   `-- protected-routes.ts
+|
+|-- constants/
+|   |-- query_const.ts
+|   `-- query_keys.ts
+|
+|-- lib/
+|   `-- utils.ts
+|
+`-- types/
+    |-- billing.ts
+    |-- category.ts
+    |-- customer.ts
+    |-- index.ts
+    |-- inventory.ts
+    |-- order.ts
+    |-- product.ts
+    |-- store.ts
+    |-- transaction.ts
+    `-- user.ts
