@@ -9,22 +9,16 @@ export const useStoreActions = () => {
 
   const handleDeactivate = (id: string) =>
     deactivateStore.mutate(id, {
-      onSuccess: () => {
-        toast.success("Store deactivated successfully.");
-      },
-      onError: (error) => {
-        toast.error(getStoreErrorMessage(error, "Failed to deactivate store."));
-      },
+      onSuccess: () => toast.success("Store deactivated successfully."),
+      onError: (error) =>
+        toast.error(getStoreErrorMessage(error, "Failed to deactivate store.")),
     });
 
   const handleActivate = (id: string) =>
     activateStore.mutate(id, {
-      onSuccess: () => {
-        toast.success("Store activated successfully.");
-      },
-      onError: (error: any) => {
-        toast.error(getStoreErrorMessage(error, "Failed to activate store."));
-      },
+      onSuccess: () => toast.success("Store activated successfully."),
+      onError: (error) =>
+        toast.error(getStoreErrorMessage(error, "Failed to activate store.")),
     });
 
   return {
