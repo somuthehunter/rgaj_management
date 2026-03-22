@@ -310,3 +310,10 @@ export const orderService = {
     return buildPaginatedResponse(rows, params.page, params.limit);
   },
 };
+
+export const getMockOrdersSnapshot = () =>
+  mockOrders.map((order) => ({
+    ...order,
+    customer: { ...order.customer },
+    items: order.items.map((item) => ({ ...item })),
+  }));
