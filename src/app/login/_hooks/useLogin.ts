@@ -36,7 +36,7 @@ export function useLogin() {
   const mutation = useMutation({
     mutationFn: (data: LoginPayload) => loginUser(data),
 
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
       const { user, accessToken } = res.data;
 
       // store session

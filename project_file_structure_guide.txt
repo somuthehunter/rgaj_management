@@ -35,31 +35,21 @@ Project root: rgaj_management
 |  |     |  Purpose: Dashboard overview screen and data hook.
 |  |
 |  |     |- Products/
-|  |        |- page.tsx
-|  |        |- _component/
-|  |        |  |- AddProductDialog.tsx
-|  |        |  |- ProductTable.tsx
-|  |        |  |- DistributeDialog.tsx
-|  |        |- _hooks/
-|  |        |  |- useProducts.ts
-|  |        |  |- useProductMutations.ts
-|  |        |  |- useProductActions.ts
-|  |        |  |- useProductDialogForm.ts
-|  |        |  |- useProductFiltersState.ts
-|  |        |  |- useProductFilterControls.ts
-|  |        |- _constants/product-controls.ts
-|  |        |- _types/
-|  |        |  |- product-controls.types.ts
-|  |        |  |- product-dialog.types.ts
-|  |        |  |- product-table.types.ts
-|  |        |- _utils/product.utils.ts
-|  |        Purpose: Feature-first module.
-|  |        - page.tsx: layout/composition only.
-|  |        - _component: presentational TSX.
-|  |        - _hooks: feature logic, handlers, state, mutations.
-|  |        - _constants: UI control option maps.
-|  |        - _types: feature-local types.
-|  |        - _utils: helper functions (error mapping, active-status resolver, defaults).
+|  |     |- Categories/
+|  |     |- Orders/
+|  |     |- Customers/
+|  |     |- Transactions/
+|  |     |- Stores/
+|  |     |- Users/
+|  |     |- Inventory/
+|  |     |- Sell/
+|  |     Each feature module follows the same feature-first structure:
+|  |     - page.tsx: layout/composition only
+|  |     - _component: presentational TSX
+|  |     - _hooks: feature logic, handlers, state, mutations
+|  |     - _constants: UI control option maps
+|  |     - _types: feature-local types
+|  |     - _utils: helper functions
 |
 |  |- components/
 |  |  |- ui/
@@ -72,21 +62,33 @@ Project root: rgaj_management
 |  |  |
 |  |  |- shared/
 |  |     |- ListControlsBar.tsx
-|  |     Purpose: reusable feature-agnostic list controls (search/filter/sort + reset).
+|  |     |- DataTable.tsx
+|  |     Purpose: reusable list controls and generic table rendering shared across modules.
 |
 |  |- services/
 |  |  |- service.ts
 |  |  |- config.ts
 |  |  |- auth.service.ts
 |  |  |- session.service.ts
+|  |  |- billing.service.ts
+|  |  |- category.service.ts
+|  |  |- customer.service.ts
+|  |  |- inventory.service.ts
+|  |  |- order.service.ts
 |  |  |- product.service.ts
-|  |  |- store.service.ts
 |  |  |- stats.service.ts
-|  |  Purpose: API layer. Endpoint calls, auth headers, request/response handling.
+|  |  |- store.service.ts
+|  |  |- transaction.service.ts
+|  |  |- user.service.ts
+|  |  Purpose: API layer and mock data layer. Endpoint calls, auth headers, request/response handling, temporary mock CRUD.
 |
 |  |- schemas/
 |  |  |- auth.schema.ts
+|  |  |- bill.schema.ts
+|  |  |- category.schema.ts
 |  |  |- product.schema.ts
+|  |  |- store.schema.ts
+|  |  |- user.schema.ts
 |  |  Purpose: zod schemas + form validation rules.
 |
 |  |- constants/
@@ -104,12 +106,20 @@ Project root: rgaj_management
 |  |  Purpose: generic utility functions (className helpers, etc).
 |
 |  |- types/
+|     |- billing.ts
+|     |- category.ts
+|     |- customer.ts
 |     |- index.ts
+|     |- inventory.ts
+|     |- order.ts
 |     |- product.ts
+|     |- store.ts
+|     |- transaction.ts
+|     |- user.ts
 |     Purpose: shared TypeScript contracts used across modules.
 |
 |- file struct.txt
-|  Purpose: existing reference file (left untouched).
+|  Purpose: legacy reference file from earlier planning stages.
 |
 |- project_file_structure_guide.txt
 |  Purpose: this guide file.
@@ -119,4 +129,6 @@ ARCHITECTURE STYLE USED
 - Business logic and handlers live in dedicated hooks.
 - Types are extracted to dedicated types files.
 - API details stay in services.
-- Reusable UI controls are shared under components/shared.
+- Validation rules stay in schemas.
+- Reusable UI controls are shared under components/shared and components/ui.
+- Mock implementations should stay isolated inside services so the UI can later switch to real APIs with minimal churn.

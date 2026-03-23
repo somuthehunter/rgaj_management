@@ -5,7 +5,7 @@ Project root: rgaj_management
 Migration context:
 - Original frontend was generated in React using Lovable.
 - Current work is being mapped and adapted into a Next.js App Router project.
-- Progress till now reflects the files already created and reorganized inside this Next.js codebase.
+- Progress below reflects the modules that are now present inside this Next.js codebase.
 
 .
 |- public/
@@ -47,97 +47,103 @@ Migration context:
 |  |  |  |  Progress: Overview page exists with a dedicated logic hook.
 |  |  |
 |  |  |  |- Products/
-|  |  |     |- page.tsx
-|  |  |     |- _component/
-|  |  |     |  |- AddProductDialog.tsx
-|  |  |     |  |- DistributeDialog.tsx
-|  |  |     |  |- ProductTable.tsx
-|  |  |     |- _constants/
-|  |  |     |  |- product-controls.ts
-|  |  |     |- _hooks/
-|  |  |     |  |- useProductActions.ts
-|  |  |     |  |- useProductDialogForm.ts
-|  |  |     |  |- useProductFilterControls.ts
-|  |  |     |  |- useProductFiltersState.ts
-|  |  |     |  |- useProductMutations.ts
-|  |  |     |  |- useProducts.ts
-|  |  |     |- _types/
-|  |  |     |  |- product-controls.types.ts
-|  |  |     |  |- product-dialog.types.ts
-|  |  |     |  |- product-table.types.ts
-|  |  |     |- _utils/
-|  |  |        |- product.utils.ts
-|  |  |     Progress: Products module is the most structured feature so far, with separated UI, hooks, constants, types, and utilities. Its feature table now uses the shared generic DataTable renderer.
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Products is a fully structured CRUD-style feature and continues to act as a reference module.
+|  |  |
+|  |  |  |- Categories/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Categories now follows the same feature-first split as Products, including dialog form flows and shared table usage.
+|  |  |
+|  |  |  |- Inventory/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  Progress: Inventory UI, filters, pagination, and distribute flow exist, still powered by mock inventory/store data for now.
+|  |  |
+|  |  |  |- Orders/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Orders page now exists with reusable filters, table, detail modal, and bill download support using mock order data.
+|  |  |
+|  |  |  |- Customers/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Customers page is now available with customer history, linked order history, summary/download support, and CSV export.
+|  |  |
+|  |  |  |- Transactions/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Transactions page now works as a system activity log/audit trail using mock event data.
+|  |  |
+|  |  |  |- Sell/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Billing/sell flow now exists for creating customer orders and generating downloadable bill output.
+|  |  |
+|  |  |  |- Stores/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Stores module is now implemented with add/edit dialog flow, details modal, filters, pagination, and mock CRUD actions.
+|  |  |
+|  |  |  |- Users/
+|  |  |  |  |- page.tsx
+|  |  |  |  |- _component/
+|  |  |  |  |- _constants/
+|  |  |  |  |- _hooks/
+|  |  |  |  |- _types/
+|  |  |  |  |- _utils/
+|  |  |  |  Progress: Users module is now implemented with add/edit dialog flow, role/store filters, pagination, and mock account management actions.
 |
 |  |- components/
 |  |  |- Dashboard/
 |  |  |  |- DashboardSidebar.tsx
 |  |  |  |- NavLink.tsx
-|  |  |  Progress: Shared dashboard navigation components are available, and the sidebar now supports default-collapsed behavior with improved small-screen responsiveness.
+|  |  |  Progress: Shared dashboard navigation components are available, and the sidebar now includes Stores, Users, Customers, and other dashboard modules.
 |  |  |
 |  |  |- shared/
 |  |  |  |- ListControlsBar.tsx
 |  |  |  |- DataTable.tsx
 |  |  |  |- DataTable_usage.txt
-|  |  |  Progress: Reusable shared components now include feature-agnostic list controls, a generic data table, and a usage guide for future developers.
+|  |  |  Progress: Reusable shared components include feature-agnostic list controls and a generic data table used across multiple pages.
 |  |  |
 |  |  |- ui/
-|  |     |- accordion.tsx
-|  |     |- alert-dialog.tsx
-|  |     |- alert.tsx
-|  |     |- aspect-ratio.tsx
-|  |     |- avatar.tsx
-|  |     |- badge.tsx
-|  |     |- breadcrumb.tsx
-|  |     |- button.tsx
-|  |     |- calendar.tsx
-|  |     |- card.tsx
-|  |     |- carousel.tsx
-|  |     |- chart.tsx
-|  |     |- checkbox.tsx
-|  |     |- collapsible.tsx
-|  |     |- command.tsx
-|  |     |- context-menu.tsx
-|  |     |- dialog.tsx
-|  |     |- drawer.tsx
-|  |     |- dropdown-menu.tsx
-|  |     |- form.tsx
-|  |     |- hover-card.tsx
-|  |     |- input-otp.tsx
-|  |     |- input.tsx
-|  |     |- label.tsx
-|  |     |- menubar.tsx
-|  |     |- navigation-menu.tsx
-|  |     |- pagination.tsx
-|  |     |- popover.tsx
-|  |     |- progress.tsx
-|  |     |- radio-group.tsx
-|  |     |- resizable.tsx
-|  |     |- scroll-area.tsx
-|  |     |- select.tsx
-|  |     |- separator.tsx
-|  |     |- sheet.tsx
-|  |     |- sidebar.tsx
-|  |     |- skeleton.tsx
-|  |     |- slider.tsx
-|  |     |- sonner.tsx
-|  |     |- switch.tsx
-|  |     |- table.tsx
-|  |     |- tabs.tsx
-|  |     |- textarea.tsx
-|  |     |- toast.tsx
-|  |     |- toaster.tsx
-|  |     |- toggle-group.tsx
-|  |     |- toggle.tsx
-|  |     |- tooltip.tsx
-|  |     |- ui_components.md
-|  |     |- use-toast.ts
 |  |     Progress: Core reusable UI primitives are already present.
 |
 |  |- constants/
 |  |  |- query_const.ts
 |  |  |- query_keys.ts
-|  |  Progress: API endpoint/query key constants are set up.
+|  |  Progress: API endpoint/query key constants now cover dashboard modules including stores, users, orders, customers, and transactions.
 |
 |  |- lib/
 |  |  |- utils.ts
@@ -146,43 +152,61 @@ Migration context:
 |  |- routes/
 |  |  |- index.ts
 |  |  |- protected-routes.ts
-|  |  Progress: Route metadata and protection config are defined.
+|  |  Progress: Route metadata and protection config are defined and now include expanded dashboard navigation.
 |
 |  |- schemas/
 |  |  |- auth.schema.ts
+|  |  |- bill.schema.ts
+|  |  |- category.schema.ts
 |  |  |- product.schema.ts
-|  |  Progress: Validation schemas are created for auth and product flows.
+|  |  |- store.schema.ts
+|  |  |- user.schema.ts
+|  |  Progress: Validation schemas are now present for auth, billing, categories, products, stores, and users.
 |
 |  |- services/
 |  |  |- auth.service.ts
+|  |  |- billing.service.ts
+|  |  |- category.service.ts
 |  |  |- config.ts
+|  |  |- customer.service.ts
+|  |  |- inventory.service.ts
+|  |  |- order.service.ts
 |  |  |- product.service.ts
 |  |  |- service.ts
 |  |  |- session.service.ts
 |  |  |- stats.service.ts
 |  |  |- store.service.ts
-|  |  Progress: Service/API layer is already separated from UI code.
+|  |  |- transaction.service.ts
+|  |  |- user.service.ts
+|  |  Progress: Service/API layer is already separated from UI code, with mocks used where backend endpoints are not yet ready.
 |
 |  |- types/
+|     |- billing.ts
+|     |- category.ts
+|     |- customer.ts
 |     |- index.ts
+|     |- inventory.ts
+|     |- order.ts
 |     |- product.ts
-|     Progress: Shared TypeScript contracts exist.
+|     |- store.ts
+|     |- transaction.ts
+|     |- user.ts
+|     Progress: Shared and feature-specific TypeScript contracts now exist across the current dashboard modules.
 |
 |- file struct.txt
-|  Progress: Older reference structure file is still present.
+|  Progress: Older reference structure file is still present and should be treated as legacy guidance.
 |
 |- project_file_structure_guide.txt
-|  Progress: Target/guide structure definition exists.
+|  Progress: Updated target/guide structure definition exists.
 |
 |- progress_report_file_structure.txt
    Progress: This file records the current migration progress.
 
 CURRENT MIGRATION SUMMARY
 - Next.js App Router foundation is established.
-- Login, Dashboard, Overview, and Products routes are already mapped.
-- Products feature is the most complete and modularized section so far.
-- Shared table rendering has been extracted into a reusable `DataTable` component for use across multiple pages.
-- A developer usage note has been added for the shared table so future contributors can follow the same pattern.
-- Dashboard sidebar behavior has been improved for small screens and now defaults to a collapsed icon-first state.
-- Shared UI, schemas, services, constants, routes, and types are already separated into dedicated folders.
+- Login, Dashboard, Overview, Products, Categories, Inventory, Orders, Customers, Transactions, Sell, Stores, and Users routes are now mapped.
+- Shared table rendering and list control patterns are being reused across most dashboard modules.
+- Billing flow now creates mock orders and feeds related dashboard modules.
+- Stores and Users now follow the same modal/form/mutation pattern as the other CRUD-style sections.
+- Some modules still rely on mock data or mock mutations until backend APIs are finalized.
 - The project is actively being converted from a Lovable-generated React frontend into a more organized Next.js structure.

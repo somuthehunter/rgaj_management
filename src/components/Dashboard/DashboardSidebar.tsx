@@ -9,6 +9,7 @@ import {
   Package,
   ShoppingCart,
   Users,
+  User,
   Store,
   Tags,
   LogOut,
@@ -32,6 +33,7 @@ type Props = {
 const routeIcons = {
   Overview: LayoutDashboard,
   Stores: Store,
+  Users: User,
   Orders: ShoppingCart,
   Customers: Users,
   Categories: Tags,

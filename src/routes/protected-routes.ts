@@ -20,6 +20,11 @@ export const protectedRoutes: RouteConfig[] = [
     roles: [UserRole.SUPER_ADMIN],
   },
   {
+    path: "/Dashboard/Users",
+    label: "Users",
+    roles: [UserRole.SUPER_ADMIN],
+  },
+  {
     path: "/Dashboard/Orders",
     label: "Orders",
     roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
