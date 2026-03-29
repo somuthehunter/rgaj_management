@@ -48,6 +48,7 @@ type StoreListResponse = {
 };
 
 let storeOptionsCache: StoreListItem[] = [];
+const STORE_BATCH_LIMIT = 100;
 
 const normalizeStore = (store: StoreApiItem): StoreListItem => ({
   id: store.id,
@@ -110,9 +111,13 @@ const updateOptionsCache = (stores: StoreListItem[]) => {
 
 const buildStoresQuery = (params?: StoreSearchParams, overrideLimit?: number) => {
   const query = new URLSearchParams();
+  const resolvedLimit = Math.min(
+    overrideLimit ?? params?.limit ?? 10,
+    STORE_BATCH_LIMIT,
+  );
 
   query.set("page", String(overrideLimit ? 1 : params?.page ?? 1));
-  query.set("limit", String(overrideLimit ?? params?.limit ?? 10));
+  query.set("limit", String(resolvedLimit));
 
   if (typeof params?.isActive === "boolean") {
     query.set("isActive", String(params.isActive));
@@ -154,7 +159,7 @@ export const storeService = {
   },
 
   search: async (params: StoreSearchParams) => {
-    const query = buildStoresQuery(params, 500);
+    const query = buildStoresQuery(params, STORE_BATCH_LIMIT);
     const res = (await getService(
       `${endpoints.stores.getAll}?${query}`,
     )) as StoreListResponse;

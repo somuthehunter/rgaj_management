@@ -40,7 +40,7 @@ export default function AddUserDialog({
   });
   const storesQuery = useQuery({
     queryKey: ["user-store-options"],
-    queryFn: () => storeService.search({ page: 1, limit: 500 }),
+    queryFn: () => storeService.search({ page: 1, limit: 100 }),
     enabled: open,
   });
   const storeOptions = storesQuery.data?.data ?? storeService.getOptions();

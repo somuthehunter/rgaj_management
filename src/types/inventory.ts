@@ -14,6 +14,23 @@ export type InventoryListItem = {
   updatedAt: string;
 };
 
+export type InventoryAllocationPayload = {
+  productId: string;
+  storeId: string;
+  weight: number;
+  stoneCount?: number;
+  stoneWeight?: number;
+  notes?: string;
+};
+
+export type CentralInventoryPayload = {
+  productId: string;
+  totalWeight: number;
+  totalStones?: number;
+  stoneWeight?: number;
+  notes?: string;
+};
+
 export type InventorySearchParams = {
   search?: string;
   storeId?: string;

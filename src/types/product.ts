@@ -27,6 +27,8 @@ export type ProductListItem = {
   deactivatedAt?: string;
   createdAt?: string;
   updatedAt?: string;
+  availableWeight?: number;
+  totalStones?: number;
 };
 
 export type ProductSearchStatus = "active" | "deactivated" | "";

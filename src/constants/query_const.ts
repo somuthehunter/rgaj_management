@@ -35,6 +35,13 @@ const endpoints = {
     activate: (id: string) => `/users/${id}/activate`,
     byStore: (storeId: string) => `/users/store/${storeId}`,
   },
+
+  inventory: {
+    central: `/inventory/central`,
+    allocate: `/inventory/allocate`,
+    summary: `/inventory/summary`,
+    byStore: (storeId: string) => `/inventory/store/${storeId}`,
+  },
 };
 
 export default endpoints;

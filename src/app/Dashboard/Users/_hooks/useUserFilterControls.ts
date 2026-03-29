@@ -31,7 +31,7 @@ export const useUserFilterControls = ({
 }: Params) => {
   const storesQuery = useQuery({
     queryKey: ["user-filter-store-options"],
-    queryFn: () => storeService.search({ page: 1, limit: 500 }),
+    queryFn: () => storeService.search({ page: 1, limit: 100 }),
   });
 
   const storeOptions = useMemo(

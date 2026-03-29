@@ -19,35 +19,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Boxes } from "lucide-react";
+import { PackagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ProductListItem } from "@/types/product";
-import { StoreListItem } from "@/types/store";
 import { inventoryService } from "@/services/inventory.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
 
-type InventoryDistributeDialogProps = {
+type InventoryReceiveStockDialogProps = {
   products?: ProductListItem[];
-  stores: StoreListItem[];
 };
 
-export default function InventoryDistributeDialog({
+export default function InventoryReceiveStockDialog({
   products = [],
-  stores,
-}: InventoryDistributeDialogProps) {
+}: InventoryReceiveStockDialogProps) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [productId, setProductId] = useState("");
-  const [storeId, setStoreId] = useState("");
-  const [weight, setWeight] = useState("");
-  const [stoneCount, setStoneCount] = useState("");
+  const [totalWeight, setTotalWeight] = useState("");
+  const [totalStones, setTotalStones] = useState("");
   const [stoneWeight, setStoneWeight] = useState("");
   const [notes, setNotes] = useState("");
 
-  const allocateMutation = useMutation({
-    mutationFn: inventoryService.allocate,
+  const receiveStockMutation = useMutation({
+    mutationFn: inventoryService.receiveCentralStock,
     onSuccess: async () => {
-      toast.success("Inventory allocated successfully.");
+      toast.success("Central stock received successfully.");
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVENTORY] }),
         queryClient.invalidateQueries({ queryKey: ["central-inventory-products"] }),
@@ -60,11 +56,7 @@ export default function InventoryDistributeDialog({
       const message =
         error instanceof Error
           ? error.message
-          : "Failed to allocate inventory.";
-      if (message.toLowerCase().includes("centralinventory")) {
-        toast.error("This product has no stock in Central Inventory yet.");
-        return;
-      }
+          : "Failed to receive central stock.";
       toast.error(message);
     },
   });
@@ -82,20 +74,18 @@ export default function InventoryDistributeDialog({
 
   const resetForm = () => {
     setProductId("");
-    setStoreId("");
-    setWeight("");
-    setStoneCount("");
+    setTotalWeight("");
+    setTotalStones("");
     setStoneWeight("");
     setNotes("");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    allocateMutation.mutate({
+    receiveStockMutation.mutate({
       productId,
-      storeId,
-      weight: Number(weight),
-      stoneCount: stoneCount ? Number(stoneCount) : undefined,
+      totalWeight: Number(totalWeight),
+      totalStones: totalStones ? Number(totalStones) : undefined,
       stoneWeight: stoneWeight ? Number(stoneWeight) : undefined,
       notes: notes.trim() || undefined,
     });
@@ -110,15 +100,15 @@ export default function InventoryDistributeDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="outline">
-          <Boxes className="mr-2 h-4 w-4" />
-          Distribute
+        <Button>
+          <PackagePlus className="mr-2 h-4 w-4" />
+          Receive Stock
         </Button>
       </DialogTrigger>
 
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Distribute Product To Store</DialogTitle>
+          <DialogTitle>Add Central Inventory Stock</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
@@ -131,28 +121,7 @@ export default function InventoryDistributeDialog({
               <SelectContent>
                 {productOptions.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name} {typeof product.availableWeight === "number" ? `(${product.availableWeight} wt)` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {productOptions.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No products currently have stock in Central Inventory. Receive stock in central inventory first, then distribute it to stores.
-              </p>
-            ) : null}
-          </div>
-
-          <div className="space-y-2">
-            <Label>Select Store</Label>
-            <Select value={storeId} onValueChange={setStoreId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a store" />
-              </SelectTrigger>
-              <SelectContent>
-                {stores.map((store) => (
-                  <SelectItem key={store.id} value={store.id}>
-                    {store.name}
+                    {product.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -160,27 +129,27 @@ export default function InventoryDistributeDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Weight</Label>
+            <Label>Total Weight</Label>
             <Input
               type="number"
               step="0.01"
               min="0"
-              value={weight}
-              onChange={(event) => setWeight(event.target.value)}
-              placeholder="Enter allocated weight"
+              value={totalWeight}
+              onChange={(event) => setTotalWeight(event.target.value)}
+              placeholder="Enter total weight"
             />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Stone Count</Label>
+              <Label>Total Stones</Label>
               <Input
                 type="number"
                 step="1"
                 min="0"
-                value={stoneCount}
-                onChange={(event) => setStoneCount(event.target.value)}
-                placeholder="Optional stone count"
+                value={totalStones}
+                onChange={(event) => setTotalStones(event.target.value)}
+                placeholder="Optional total stones"
               />
             </div>
 
@@ -209,9 +178,9 @@ export default function InventoryDistributeDialog({
           <Button
             type="submit"
             className="w-full"
-            disabled={!productId || !storeId || !weight || allocateMutation.isPending}
+            disabled={!productId || !totalWeight || receiveStockMutation.isPending}
           >
-            {allocateMutation.isPending ? "Saving..." : "Save Distribution"}
+            {receiveStockMutation.isPending ? "Saving..." : "Add Stock"}
           </Button>
         </form>
       </DialogContent>

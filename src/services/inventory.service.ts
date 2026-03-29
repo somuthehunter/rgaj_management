@@ -1,160 +1,112 @@
-import { PaginatedResponse, Store } from "@/types";
-import { InventoryListItem, InventorySearchParams } from "@/types/inventory";
+import { getService, postService } from "./service";
+import endpoints from "@/constants/query_const";
+import { PaginatedResponse } from "@/types";
+import {
+  InventoryAllocationPayload,
+  CentralInventoryPayload,
+  InventoryListItem,
+  InventorySearchParams,
+} from "@/types/inventory";
+import { storeService } from "./store.service";
 
-export const mockInventoryStores: Store[] = [
-  {
-    id: "store-1",
-    name: "Main Showroom",
-    location: "Kolkata",
-    managerId: "mgr-1",
-    managerName: "Amit Roy",
-    createdAt: "2026-03-01T10:00:00.000Z",
-    productCount: 42,
-  },
-  {
-    id: "store-2",
-    name: "City Branch",
-    location: "Durgapur",
-    managerId: "mgr-2",
-    managerName: "Priya Das",
-    createdAt: "2026-03-02T10:00:00.000Z",
-    productCount: 28,
-  },
-  {
-    id: "store-3",
-    name: "Mall Branch",
-    location: "Siliguri",
-    managerId: "mgr-3",
-    managerName: "Rohan Sen",
-    createdAt: "2026-03-03T10:00:00.000Z",
-    productCount: 17,
-  },
-];
-
-const mockInventory: InventoryListItem[] = [
-  {
-    id: "inv-1",
-    storeId: "store-1",
-    storeName: "Main Showroom",
-    productId: "prod-1",
-    productName: "Diamond Earrings 28K",
-    productSku: "EARR-28K-71534",
-    category: "Diamond Collection",
-    quantityNumber: 8,
-    measuredQuantity: 6.5,
-    measuredUnit: "carat",
-    updatedAt: "2026-03-15T09:00:00.000Z",
-  },
-  {
-    id: "inv-2",
-    storeId: "store-2",
-    storeName: "City Branch",
-    productId: "prod-2",
-    productName: "Gold Necklace 22K Traditional",
-    productSku: "NECK-22K-001",
-    category: "Gold Jewellery",
-    quantityNumber: 5,
-    measuredQuantity: 18,
-    measuredUnit: "ratti",
-    updatedAt: "2026-03-15T09:15:00.000Z",
-  },
-  {
-    id: "inv-3",
-    storeId: "store-3",
-    storeName: "Mall Branch",
-    productId: "prod-3",
-    productName: "Gold Bangles 22K Pair",
-    productSku: "BANG-22K-001",
-    category: "Gold Jewellery",
-    quantityNumber: 11,
-    measuredQuantity: 24,
-    measuredUnit: "ratti",
-    updatedAt: "2026-03-15T10:00:00.000Z",
-  },
-  {
-    id: "inv-4",
-    storeId: "store-1",
-    storeName: "Main Showroom",
-    productId: "prod-4",
-    productName: "Silver Anklet Premium",
-    productSku: "SIL-ANK-004",
-    category: "Silver Jewellery",
-    quantityNumber: 14,
-    measuredQuantity: 9.25,
-    measuredUnit: "carat",
-    updatedAt: "2026-03-15T10:20:00.000Z",
-  },
-  {
-    id: "inv-5",
-    storeId: "store-2",
-    storeName: "City Branch",
-    productId: "prod-5",
-    productName: "Kids Bracelet",
-    productSku: "KID-BRC-002",
-    category: "Kids Collection",
-    quantityNumber: 19,
-    measuredQuantity: 7,
-    measuredUnit: "ratti",
-    updatedAt: "2026-03-15T11:00:00.000Z",
-  },
-  {
-    id: "inv-6",
-    storeId: "store-3",
-    storeName: "Mall Branch",
-    productId: "prod-6",
-    productName: "Wedding Choker Set",
-    productSku: "WED-CHK-008",
-    category: "Wedding Specials",
-    quantityNumber: 3,
-    measuredQuantity: 14.5,
-    measuredUnit: "carat",
-    updatedAt: "2026-03-15T11:30:00.000Z",
-  },
-];
-
-const delay = async () =>
-  new Promise((resolve) => window.setTimeout(resolve, 100));
-
-const buildPaginatedResponse = (
-  rows: InventoryListItem[],
-  page = 1,
-  limit = 10,
-): PaginatedResponse<InventoryListItem> => {
-  const safePage = Math.max(1, page);
-  const safeLimit = Math.max(1, limit);
-  const total = rows.length;
-  const startIndex = (safePage - 1) * safeLimit;
-
-  return {
-    success: true,
-    data: rows.slice(startIndex, startIndex + safeLimit),
-    total,
-    page: safePage,
-    limit: safeLimit,
+type InventoryApiItem = {
+  id: string;
+  storeId: string;
+  productId: string;
+  allocatedWeight?: number;
+  availableWeight?: number;
+  allocatedStones?: number;
+  stoneWeight?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  product?: {
+    id: string;
+    name?: string;
+    sku?: string;
+    category?: string;
   };
 };
 
-const filterInventory = (params?: InventorySearchParams) => {
-  const search = params?.search?.trim().toLowerCase() ?? "";
+type InventoryListResponse = {
+  success: boolean;
+  data?: InventoryApiItem[];
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  message?: string;
+};
 
-  const rows = mockInventory.filter((item) => {
-    const matchesSearch = !search
-      ? true
-      : item.productName.toLowerCase().includes(search) ||
-        item.productSku.toLowerCase().includes(search) ||
-        item.storeName.toLowerCase().includes(search);
+const INVENTORY_BATCH_LIMIT = 100;
 
-    const matchesStore = params?.storeId ? item.storeId === params.storeId : true;
-    const matchesCategory = params?.category
-      ? item.category === params.category
-      : true;
+type CentralInventoryApiItem = {
+  id: string;
+  productId: string;
+  totalWeight?: number;
+  availableWeight?: number;
+  totalStones?: number;
+  product?: {
+    id: string;
+    name?: string;
+    sku?: string;
+    category?: string;
+    purity?: string;
+    hsnCode?: string;
+    makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
+    makingCharge?: number;
+    gstRate?: number;
+    isActive?: boolean;
+  };
+};
 
-    return matchesSearch && matchesStore && matchesCategory;
-  });
+type CentralInventoryListResponse = {
+  success: boolean;
+  data?: CentralInventoryApiItem[];
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  message?: string;
+};
 
-  const sortBy = params?.sortBy;
-  const sortOrder = params?.sortOrder ?? "";
+export type CentralInventoryListItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  category: string;
+  totalWeight: number;
+  availableWeight: number;
+  totalStones: number;
+  updatedAt: string;
+};
 
+const normalizeInventoryItem = (
+  item: InventoryApiItem,
+  storeName: string,
+): InventoryListItem => ({
+  id: item.id,
+  storeId: item.storeId,
+  storeName,
+  productId: item.productId,
+  productName: item.product?.name ?? "Unnamed Product",
+  productSku: item.product?.sku ?? "N/A",
+  category: item.product?.category ?? "",
+  quantityNumber: item.allocatedStones ?? 0,
+  measuredQuantity: item.availableWeight ?? item.allocatedWeight ?? 0,
+  measuredUnit: "carat",
+  updatedAt: item.updatedAt ?? item.createdAt ?? new Date().toISOString(),
+});
+
+const sortInventory = (
+  rows: InventoryListItem[],
+  sortBy?: string,
+  sortOrder?: "asc" | "desc" | "",
+) => {
   if (!sortBy || !sortOrder) {
     return [...rows].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
@@ -174,15 +126,158 @@ const filterInventory = (params?: InventorySearchParams) => {
       return a.storeName.localeCompare(b.storeName) * multiplier;
     }
 
-    return b.updatedAt.localeCompare(a.updatedAt);
+    return a.updatedAt.localeCompare(b.updatedAt) * multiplier;
   });
 };
 
+const filterInventory = (rows: InventoryListItem[], params?: InventorySearchParams) => {
+  const search = params?.search?.trim().toLowerCase() ?? "";
+
+  return rows.filter((item) => {
+    const matchesSearch = !search
+      ? true
+      : item.productName.toLowerCase().includes(search) ||
+        item.productSku.toLowerCase().includes(search) ||
+        item.storeName.toLowerCase().includes(search);
+
+    const matchesStore = params?.storeId ? item.storeId === params.storeId : true;
+    const matchesCategory = params?.category ? item.category === params.category : true;
+
+    return matchesSearch && matchesStore && matchesCategory;
+  });
+};
+
+const buildPaginatedResponse = (
+  rows: InventoryListItem[],
+  page = 1,
+  limit = 10,
+  total = rows.length,
+): PaginatedResponse<InventoryListItem> => ({
+  success: true,
+  data: rows,
+  page,
+  limit,
+  total,
+});
+
 export const inventoryService = {
-  // Replace this mock implementation with real inventory API calls later.
-  getAll: async (params?: InventorySearchParams) => {
-    await delay();
-    const rows = filterInventory(params);
-    return buildPaginatedResponse(rows, params?.page, params?.limit);
+  getCentralInventory: async (page = 1, limit = 10) => {
+    const res = (await getService(
+      `${endpoints.inventory.central}?page=${page}&limit=${limit}`,
+    )) as CentralInventoryListResponse;
+
+    const rows: CentralInventoryListItem[] = (res.data ?? []).map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      productName: item.product?.name ?? "Unnamed Product",
+      productSku: item.product?.sku ?? "N/A",
+      category: item.product?.category ?? "",
+      totalWeight: item.totalWeight ?? 0,
+      availableWeight: item.availableWeight ?? 0,
+      totalStones: item.totalStones ?? 0,
+      updatedAt: new Date().toISOString(),
+    }));
+
+    return {
+      success: res.success,
+      data: rows,
+      page: res.pagination?.page ?? page,
+      limit: res.pagination?.limit ?? limit,
+      total: res.pagination?.total ?? rows.length,
+      message: res.message,
+    };
   },
+
+  getCentralProducts: async () => {
+    const res = (await getService(
+      `${endpoints.inventory.central}?page=1&limit=${INVENTORY_BATCH_LIMIT}`,
+    )) as CentralInventoryListResponse;
+
+    return (res.data ?? [])
+      .filter((item) => (item.availableWeight ?? 0) > 0 && item.product?.id)
+      .map((item) => ({
+        id: item.product?.id ?? item.productId,
+        sku: item.product?.sku ?? "N/A",
+        name: item.product?.name ?? "Unnamed Product",
+        category: item.product?.category ?? "",
+        purity: item.product?.purity ?? "",
+        hsnCode: item.product?.hsnCode ?? "",
+        makingChargeType: item.product?.makingChargeType,
+        makingCharge: item.product?.makingCharge,
+        gstRate: item.product?.gstRate,
+        isActive:
+          typeof item.product?.isActive === "boolean"
+            ? item.product.isActive
+            : true,
+        availableWeight: item.availableWeight ?? 0,
+        totalStones: item.totalStones ?? 0,
+      }));
+  },
+
+  getAll: async (params?: InventorySearchParams) => {
+    if (params?.storeId) {
+      const query = new URLSearchParams({
+        page: String(params.page ?? 1),
+        limit: String(params.limit ?? 10),
+      });
+
+      const store =
+        storeService.getOptions().find((item) => item.id === params.storeId) ??
+        (await storeService.getById(params.storeId).then((res) => res.data).catch(() => null));
+
+      const res = (await getService(
+        `${endpoints.inventory.byStore(params.storeId)}?${query.toString()}`,
+      )) as InventoryListResponse;
+
+      const rows = sortInventory(
+        (res.data ?? []).map((item) =>
+          normalizeInventoryItem(item, store?.name ?? "Store"),
+        ),
+        params?.sortBy,
+        params?.sortOrder,
+      );
+
+      return buildPaginatedResponse(
+        rows,
+        res.pagination?.page ?? params?.page ?? 1,
+        res.pagination?.limit ?? params?.limit ?? 10,
+        res.pagination?.total ?? rows.length,
+      );
+    }
+
+    const stores = await storeService.search({
+      page: 1,
+      limit: INVENTORY_BATCH_LIMIT,
+    });
+    const activeStores = stores.data;
+
+    const inventoryByStore = await Promise.all(
+      activeStores.map(async (store) => {
+        const res = (await getService(
+          `${endpoints.inventory.byStore(store.id)}?page=1&limit=${INVENTORY_BATCH_LIMIT}`,
+        )) as InventoryListResponse;
+
+        return (res.data ?? []).map((item) => normalizeInventoryItem(item, store.name));
+      }),
+    );
+
+    const flattened = inventoryByStore.flat();
+    const filtered = sortInventory(filterInventory(flattened, params), params?.sortBy, params?.sortOrder);
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+    const startIndex = (page - 1) * limit;
+
+    return buildPaginatedResponse(
+      filtered.slice(startIndex, startIndex + limit),
+      page,
+      limit,
+      filtered.length,
+    );
+  },
+
+  allocate: (payload: InventoryAllocationPayload) =>
+    postService(endpoints.inventory.allocate, payload),
+
+  receiveCentralStock: (payload: CentralInventoryPayload) =>
+    postService(endpoints.inventory.central, payload),
 };
