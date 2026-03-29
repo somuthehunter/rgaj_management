@@ -81,17 +81,10 @@ export default function AddStoreDialog({
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input {...form.register("phone")} />
-              <p className="text-sm text-destructive">{form.formState.errors.phone?.message}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Manager Name</Label>
-              <Input {...form.register("managerName")} />
-              <p className="text-sm text-destructive">{form.formState.errors.managerName?.message}</p>
-            </div>
+          <div className="space-y-2">
+            <Label>Phone</Label>
+            <Input {...form.register("phone")} />
+            <p className="text-sm text-destructive">{form.formState.errors.phone?.message}</p>
           </div>
 
           <Button type="submit" className="w-full" disabled={pending}>

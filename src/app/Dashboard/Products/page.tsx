@@ -7,6 +7,7 @@ import ProductTable from "./_component/ProductTable";
 import { useProducts } from "./_hooks/useProducts";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
+import { normalizeRole } from "@/lib/auth";
 import ListControlsBar from "@/components/shared/ListControlsBar";
 import { useProductActions } from "./_hooks/useProductActions";
 import { useProductFiltersState } from "./_hooks/useProductFiltersState";
@@ -33,10 +34,8 @@ export default function ProductsPage() {
 
   useEffect(() => {
     const user = getUser();
-    const normalizedRole = user?.role?.toUpperCase();
-    setIsAdmin(
-      normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
-    );
+    const normalizedRole = normalizeRole(user?.role);
+    setIsAdmin(normalizedRole === UserRole.SUPER_ADMIN);
   }, []);
 
   const filters = useProductFiltersState();

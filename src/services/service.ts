@@ -5,6 +5,7 @@ type JsonObject = Record<string, unknown>;
 
 const ACCESS_TOKEN_KEY = "token";
 const USER_KEY = "user";
+const REFRESH_TOKEN_KEY = "refreshToken";
 
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -47,6 +48,7 @@ const parseResponse = async (res: Response) => {
     const data = payload as JsonObject | null;
     const message =
       (data?.message as string | undefined) ||
+      ((data?.error as JsonObject | undefined)?.message as string | undefined) ||
       (data?.error as string | undefined) ||
       `Request failed with status ${res.status}`;
     const error = new Error(message) as Error & {
@@ -70,6 +72,12 @@ const refreshAccessToken = async (): Promise<string | null> => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // credentials: "include",
+        body: JSON.stringify({
+          refreshToken:
+            typeof window !== "undefined"
+              ? localStorage.getItem(REFRESH_TOKEN_KEY)
+              : null,
+        }),
       });
 
       if (!res.ok) return null;

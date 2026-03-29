@@ -6,12 +6,13 @@ export type StoreListItem = {
   city: string;
   state: string;
   phone: string;
-  managerName: string;
+  managerName?: string;
   userCount: number;
   isActive?: boolean;
   status?: string;
   deactivatedAt?: string;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type StoreSearchStatus = "active" | "deactivated" | "";

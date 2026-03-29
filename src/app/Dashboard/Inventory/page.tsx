@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ListControlsBar from "@/components/shared/ListControlsBar";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
+import { normalizeRole } from "@/lib/auth";
 import { mockInventoryStores } from "@/services/inventory.service";
 import { useProducts } from "../Products/_hooks/useProducts";
 import InventoryTable from "./_component/InventoryTable";
@@ -35,10 +36,8 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const user = getUser();
-    const normalizedRole = user?.role?.toUpperCase();
-    setIsAdmin(
-      normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
-    );
+    const normalizedRole = normalizeRole(user?.role);
+    setIsAdmin(normalizedRole === UserRole.SUPER_ADMIN);
     setUserStoreId(user?.storeId ?? "");
   }, []);
 

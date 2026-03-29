@@ -22,8 +22,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUser, clearSession } from "@/services/session.service";
+import { logoutUser } from "@/services/auth.service";
 import { protectedRoutes } from "@/routes/protected-routes";
-import { UserRole } from "@/types";
+import { normalizeRole } from "@/lib/auth";
 
 type Props = {
   collapsed: boolean;
@@ -43,14 +44,6 @@ const routeIcons = {
   Transactions: ReceiptText,
   Statistics: BarChart3,
 } as const;
-
-const normalizeRole = (role?: string): UserRole | null => {
-  if (!role) return null;
-  const upperRole = role.toUpperCase();
-  if (upperRole === UserRole.SUPER_ADMIN || upperRole === "ADMIN") return UserRole.SUPER_ADMIN; //leter change
-  if (upperRole === UserRole.STORE_ADMIN) return UserRole.STORE_ADMIN;
-  return null;
-};
 
 const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
   const pathname = usePathname();
@@ -92,9 +85,15 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
     route.roles.includes(role),
   );
 
-  const handleLogout = () => {
-    clearSession();
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch {
+      // Clear client session even if the logout request fails.
+    } finally {
+      clearSession();
+      router.push("/login");
+    }
   };
 
   const isExpanded = isMobile ? mobileExpanded : !collapsed;

@@ -24,7 +24,7 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 
 export default function StoresPage() {
   const filters = useStoreFiltersState();
-  const { data, isLoading } = useStores(filters.queryParams);
+  const { data, isLoading, isError, error } = useStores(filters.queryParams);
   const { selectControls } = useStoreFilterControls({
     statusFilter: filters.statusFilter,
     sortValue: filters.sortValue,
@@ -63,6 +63,10 @@ export default function StoresPage() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load stores."}
+        </p>
       ) : (
         <div className="space-y-4">
           <StoreTable

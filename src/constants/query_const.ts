@@ -22,6 +22,7 @@ const endpoints = {
     getById: (id: string) => `/stores/${id}`,
     update: (id: string) => `/stores/${id}`,
     delete: (id: string) => `/stores/${id}`,
+    activate: (id: string) => `/stores/${id}/activate`,
     stats: (id: string) => `/stores/${id}/stats`,
   },
 

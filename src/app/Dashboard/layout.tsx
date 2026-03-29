@@ -3,16 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import DashboardSidebar from "@/components/Dashboard/DashboardSidebar";
-import { isRouteAllowed } from "@/routes/protected-routes";
-import { UserRole } from "@/types";
-
-const normalizeRole = (role?: string): UserRole | null => {
-  if (!role) return null;
-  const upperRole = role.toUpperCase();
-  if (upperRole === UserRole.SUPER_ADMIN || upperRole === "ADMIN") return UserRole.SUPER_ADMIN; //leter change
-  if (upperRole === UserRole.STORE_ADMIN) return UserRole.STORE_ADMIN;
-  return null;
-};
+import { getDefaultRouteForRole, isRouteAllowed } from "@/routes/protected-routes";
+import { extractProfileUser, getProfile } from "@/services/auth.service";
+import { clearSession, getUser, setSession } from "@/services/session.service";
+import { normalizeRole } from "@/lib/auth";
 
 export default function DashboardLayout({
   children,
@@ -20,38 +14,79 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    let cancelled = false;
 
-    if (!storedUser) {
-      router.replace("/login");
-      return;
-    }
+    const validateSession = async () => {
+      const user = getUser();
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-    let user: { role?: string } | null = null;
-    try {
-      user = JSON.parse(storedUser);
-    } catch {
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
-      router.replace("/login");
-      return;
-    }
+      if (!user || !token) {
+        clearSession();
+        if (!cancelled) {
+          setRedirectTo("/login");
+          setIsCheckingAuth(false);
+        }
+        return;
+      }
 
-    const role = normalizeRole(user?.role);
+      try {
+        const res = await getProfile();
+        const profile = extractProfileUser(res);
+        const role = normalizeRole(profile?.role ?? user.role);
 
-    if (!role) {
-      router.replace("/login");
-      return;
-    }
+        if (!profile?.id || !profile?.name || !profile?.email || !role) {
+          throw new Error("Invalid profile payload.");
+        }
 
-    if (!isRouteAllowed(pathname, role)) {
-      router.replace("/Dashboard/Overview");
-    }
-  }, [pathname, router]);
+        setSession(profile, token);
+
+        if (!isRouteAllowed(pathname, role)) {
+          if (!cancelled) {
+            setRedirectTo(getDefaultRouteForRole(role));
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setRedirectTo(null);
+        }
+      } catch {
+        clearSession();
+        if (!cancelled) {
+          setRedirectTo("/login");
+        }
+        return;
+      } finally {
+        if (!cancelled) setIsCheckingAuth(false);
+      }
+    };
+
+    void validateSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!redirectTo) return;
+    router.replace(redirectTo);
+  }, [redirectTo, router]);
+
+  if (isCheckingAuth || redirectTo) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Checking session...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

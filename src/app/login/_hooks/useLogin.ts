@@ -1,11 +1,18 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { loginUser, LoginPayload } from "@/services/auth.service";
+import {
+  extractAuthSession,
+  loginUser,
+  LoginPayload,
+} from "@/services/auth.service";
 import { useState } from "react";
 import { loginSchema } from "@/schemas/auth.schema";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { setSession } from "@/services/session.service";
+import { normalizeRole } from "@/lib/auth";
+import { getDefaultRouteForRole } from "@/routes/protected-routes";
 
 type ApiErrorPayload = {
   message?: string;
@@ -37,14 +44,23 @@ export function useLogin() {
     mutationFn: (data: LoginPayload) => loginUser(data),
 
     onSuccess: (res: any) => {
-      const { user, accessToken } = res.data;
+      const { user, accessToken, refreshToken } = extractAuthSession(res);
+      const role = normalizeRole(user?.role);
 
-      // store session
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("token", accessToken);
+      if (!user || !accessToken) {
+        toast.error("Login succeeded but the session payload was incomplete.");
+        return;
+      }
+
+      if (!role) {
+        toast.error("Unsupported user role received from server.");
+        return;
+      }
+
+      setSession(user, accessToken, refreshToken);
 
       toast.success("Login successful.");
-      router.push("/Dashboard");
+      router.replace(getDefaultRouteForRole(role));
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

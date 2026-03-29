@@ -2,6 +2,7 @@
 export enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
   STORE_ADMIN = "STORE_ADMIN",
+  CASHIER = "CASHIER",
 }
 
 export enum TransactionType {
@@ -19,10 +20,15 @@ export enum OrderStatus {
 // Types
 export interface User {
   id: string;
-  name: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  name: string;
   role: UserRole;
-  storeId?: string;
+  storeId?: string | null;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Store {

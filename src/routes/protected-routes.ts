@@ -12,7 +12,7 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Overview",
     label: "Overview",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Stores",
@@ -27,12 +27,12 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Orders",
     label: "Orders",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Customers",
     label: "Customers",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Categories",
@@ -52,7 +52,7 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Sell",
     label: "Sell",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Transactions",
@@ -72,5 +72,15 @@ export const isRouteAllowed = (path: string, role: UserRole): boolean => {
   );
   if (!route) return false;
   return route.roles.includes(role);
+};
+
+export const getDefaultRouteForRole = (role: UserRole): string => {
+  const preferredRoutes: Record<UserRole, string> = {
+    [UserRole.SUPER_ADMIN]: "/Dashboard/Overview",
+    [UserRole.STORE_ADMIN]: "/Dashboard/Overview",
+    [UserRole.CASHIER]: "/Dashboard/Sell",
+  };
+
+  return preferredRoutes[role];
 };
 

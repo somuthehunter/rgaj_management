@@ -35,5 +35,4 @@ export const getStoreFormDefaults = (store?: StoreListItem): StoreFormValues => 
   city: store?.city ?? "",
   state: store?.state ?? "",
   phone: store?.phone ?? "",
-  managerName: store?.managerName ?? "",
 });
