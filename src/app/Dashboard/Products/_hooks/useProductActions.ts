@@ -5,7 +5,7 @@ import { useProductMutations } from "./useProductMutations";
 import { getProductErrorMessage } from "../_utils/product.utils";
 
 export const useProductActions = () => {
-  const { deleteProduct, activateProduct, returnProduct } = useProductMutations();
+  const { deleteProduct, activateProduct } = useProductMutations();
 
   const handleDeactivate = (id: string) =>
     deleteProduct.mutate(id, {
@@ -27,22 +27,8 @@ export const useProductActions = () => {
       },
     });
 
-  const handleReturn = (id: string) =>
-    returnProduct.mutate(
-      { id, qty: 1 },
-      {
-        onSuccess: () => {
-          toast.success("Product returned successfully.");
-        },
-        onError: (error) => {
-          toast.error(getProductErrorMessage(error, "Failed to return product."));
-        },
-      },
-    );
-
   return {
     handleDeactivate,
     handleActivate,
-    handleReturn,
   };
 };

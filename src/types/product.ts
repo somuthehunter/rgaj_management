@@ -21,12 +21,12 @@ export type ProductListItem = {
   makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
   makingCharge?: number;
   gstRate?: number;
-  price?: number;
-  quantity?: number;
   isActive?: boolean;
   active?: boolean;
   status?: string;
   deactivatedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ProductSearchStatus = "active" | "deactivated" | "";

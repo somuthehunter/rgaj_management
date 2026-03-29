@@ -99,6 +99,18 @@ export default function AddProductDialog({
             </p>
           </div>
 
+          <div className="space-y-2">
+            <Label>GST Rate</Label>
+            <Input
+              type="number"
+              step="0.01"
+              {...form.register("gstRate", { valueAsNumber: true })}
+            />
+            <p className="text-sm text-destructive">
+              {form.formState.errors.gstRate?.message}
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Making Charge Type</Label>
@@ -139,32 +151,6 @@ export default function AddProductDialog({
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>GST Rate</Label>
-              <Input
-                type="number"
-                step="0.01"
-                {...form.register("gstRate", { valueAsNumber: true })}
-              />
-              <p className="text-sm text-destructive">
-                {form.formState.errors.gstRate?.message}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Quantity</Label>
-              <Input
-                type="number"
-                {...form.register("quantity", { valueAsNumber: true })}
-              />
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            Quantity is kept for now and will be sent after backend support is added.
-          </p>
 
           <Button type="submit" className="w-full" disabled={pending}>
             {pending

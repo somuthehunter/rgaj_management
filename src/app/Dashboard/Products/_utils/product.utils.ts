@@ -52,5 +52,4 @@ export const getProductFormDefaults = (
       : "PERCENTAGE",
   makingCharge: Number(product?.makingCharge ?? 0),
   gstRate: Number(product?.gstRate ?? 3),
-  quantity: Number(product?.quantity ?? 0),
 });

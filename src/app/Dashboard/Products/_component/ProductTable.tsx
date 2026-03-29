@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
-import { RotateCcw, Pencil, Ban, CheckCircle2 } from "lucide-react";
+import { Pencil, Ban, CheckCircle2 } from "lucide-react";
 import AddProductDialog from "./AddProductDialog";
 import { isProductActive } from "../_utils/product.utils";
 import { ProductRow, ProductTableProps } from "../_types/product-table.types";
@@ -13,7 +13,6 @@ export default function ProductTable({
   isAdmin,
   onDeactivate,
   onActivate,
-  onReturn,
 }: ProductTableProps) {
   const columns: DataTableColumn<ProductRow>[] = [
     {
@@ -49,14 +48,10 @@ export default function ProductTable({
       },
     },
     {
-      id: "price",
-      header: "Price",
-      cell: (product) => `Rs. ${product.price}`,
-    },
-    {
-      id: "quantity",
-      header: "Qty",
-      cell: (product) => product.quantity,
+      id: "charges",
+      header: "Charges",
+      cell: (product) =>
+        `${product.makingChargeType ?? "-"} / GST ${product.gstRate ?? 0}%`,
     },
     {
       id: "actions",
@@ -75,17 +70,6 @@ export default function ProductTable({
                 </Button>
               }
             />
-
-            {!isAdmin && (
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => onReturn(product.id)}
-              >
-                <RotateCcw className="h-4 w-4" />
-              </Button>
-            )}
-
             <Button
               size="icon"
               variant="ghost"

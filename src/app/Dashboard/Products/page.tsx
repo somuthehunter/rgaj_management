@@ -39,7 +39,7 @@ export default function ProductsPage() {
   }, []);
 
   const filters = useProductFiltersState();
-  const { data, isLoading } = useProducts(filters.queryParams);
+  const { data, isLoading, isError, error } = useProducts(filters.queryParams);
   const { selectControls } = useProductFilterControls({
     products: data?.data,
     categoryFilter: filters.categoryFilter,
@@ -50,7 +50,7 @@ export default function ProductsPage() {
     setSortValue: filters.setSortValue,
   });
 
-  const { handleDeactivate, handleActivate, handleReturn } = useProductActions();
+  const { handleDeactivate, handleActivate } = useProductActions();
 
   const currentPage = data?.page ?? filters.page;
   const totalItems = data?.total ?? 0;
@@ -79,6 +79,10 @@ export default function ProductsPage() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load products."}
+        </p>
       ) : (
         <div className="space-y-4">
           <ProductTable
@@ -86,7 +90,6 @@ export default function ProductsPage() {
             isAdmin={isAdmin}
             onDeactivate={handleDeactivate}
             onActivate={handleActivate}
-            onReturn={handleReturn}
           />
           <ProductPagination
             currentPage={currentPage}
