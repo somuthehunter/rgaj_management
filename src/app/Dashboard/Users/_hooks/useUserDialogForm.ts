@@ -31,9 +31,15 @@ export const useUserDialogForm = ({
   const pending = createUser.isPending || updateUser.isPending;
 
   const onSubmit = (data: UserFormValues) => {
+    if (!isEditMode && !data.password) {
+      toast.error("Password is required when creating a user.");
+      return;
+    }
+
     const normalizedData = {
       ...data,
       storeId: data.role === "SUPER_ADMIN" ? "" : data.storeId,
+      password: data.password || "",
     };
 
     if (isEditMode && user?.id) {

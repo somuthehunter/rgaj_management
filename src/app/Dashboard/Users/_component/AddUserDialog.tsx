@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,12 @@ export default function AddUserDialog({
     open,
     setOpen,
   });
-  const storeOptions = storeService.getOptions();
+  const storesQuery = useQuery({
+    queryKey: ["user-store-options"],
+    queryFn: () => storeService.search({ page: 1, limit: 500 }),
+    enabled: open,
+  });
+  const storeOptions = storesQuery.data?.data ?? storeService.getOptions();
   const selectedRole = form.watch("role");
 
   const fallbackTrigger = useMemo(() => {
@@ -60,10 +66,17 @@ export default function AddUserDialog({
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
-          <div className="space-y-2">
-            <Label>Name</Label>
-            <Input {...form.register("name")} />
-            <p className="text-sm text-destructive">{form.formState.errors.name?.message}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>First Name</Label>
+              <Input {...form.register("firstName")} />
+              <p className="text-sm text-destructive">{form.formState.errors.firstName?.message}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Last Name</Label>
+              <Input {...form.register("lastName")} />
+              <p className="text-sm text-destructive">{form.formState.errors.lastName?.message}</p>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -73,11 +86,6 @@ export default function AddUserDialog({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Phone</Label>
-              <Input {...form.register("phone")} />
-              <p className="text-sm text-destructive">{form.formState.errors.phone?.message}</p>
-            </div>
             <div className="space-y-2">
               <Label>Role</Label>
               <Controller
@@ -91,15 +99,21 @@ export default function AddUserDialog({
                     <SelectContent>
                       <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
                       <SelectItem value={UserRole.STORE_ADMIN}>Store Admin</SelectItem>
+                      <SelectItem value={UserRole.CASHIER}>Cashier</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               />
               <p className="text-sm text-destructive">{form.formState.errors.role?.message}</p>
             </div>
+            <div className="space-y-2">
+              <Label>{isEditMode ? "Password (optional)" : "Password"}</Label>
+              <Input type="password" {...form.register("password")} />
+              <p className="text-sm text-destructive">{form.formState.errors.password?.message}</p>
+            </div>
           </div>
 
-          {selectedRole === UserRole.STORE_ADMIN && (
+          {selectedRole !== UserRole.SUPER_ADMIN && (
             <div className="space-y-2">
               <Label>Store</Label>
               <Controller
@@ -120,6 +134,9 @@ export default function AddUserDialog({
                   </Select>
                 )}
               />
+              {storesQuery.isError ? (
+                <p className="text-sm text-destructive">Failed to load stores.</p>
+              ) : null}
             </div>
           )}
 

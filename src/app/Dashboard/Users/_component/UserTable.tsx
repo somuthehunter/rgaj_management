@@ -28,9 +28,9 @@ export default function UserTable({
       ),
     },
     {
-      id: "phone",
-      header: "Phone",
-      cell: (user) => user.phone,
+      id: "email",
+      header: "Email",
+      cell: (user) => user.email,
     },
     {
       id: "role",
