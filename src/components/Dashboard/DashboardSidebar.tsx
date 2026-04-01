@@ -22,6 +22,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getUser, clearSession } from "@/services/session.service";
 import { logoutUser } from "@/services/auth.service";
 import { protectedRoutes } from "@/routes/protected-routes";
@@ -142,43 +143,45 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
         )}
       </div>
 
-      <nav
+      <ScrollArea
         className={cn(
-          "flex-1 py-4 overflow-y-auto",
-          isExpanded ? "px-3 space-y-1.5" : "px-2 space-y-2",
+          "flex-1",
+          isExpanded ? "px-3" : "px-2",
         )}
       >
-        {visibleRoutes.map((route) => {
-          const isActive = pathname.toLowerCase() === route.path.toLowerCase();
-          const Icon = routeIcons[route.label as keyof typeof routeIcons] ?? Package;
+        <nav className={cn("py-4", isExpanded ? "space-y-1.5" : "space-y-2")}>
+          {visibleRoutes.map((route) => {
+            const isActive = pathname.toLowerCase() === route.path.toLowerCase();
+            const Icon = routeIcons[route.label as keyof typeof routeIcons] ?? Package;
 
-          return (
-            <Link
-              key={route.path}
-              href={route.path}
-              onClick={() => {
-                if (isMobile) {
-                  setMobileExpanded(false);
-                }
-              }}
-              className={cn(
-                "rounded-lg text-sm transition-all duration-200",
-                isExpanded
-                  ? "flex items-center gap-3 px-3 py-2.5"
-                  : "flex items-center justify-center p-3",
-                isActive
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "hover:bg-muted",
-              )}
-              aria-label={route.label}
-              title={!isExpanded ? route.label : undefined}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {isExpanded && <span>{route.label}</span>}
-            </Link>
-          );
-        })}
-      </nav>
+            return (
+              <Link
+                key={route.path}
+                href={route.path}
+                onClick={() => {
+                  if (isMobile) {
+                    setMobileExpanded(false);
+                  }
+                }}
+                className={cn(
+                  "rounded-lg text-sm transition-all duration-200",
+                  isExpanded
+                    ? "flex items-center gap-3 px-3 py-2.5"
+                    : "flex items-center justify-center p-3",
+                  isActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "hover:bg-muted",
+                )}
+                aria-label={route.label}
+                title={!isExpanded ? route.label : undefined}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {isExpanded && <span>{route.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+      </ScrollArea>
 
       <div
         className={cn(
