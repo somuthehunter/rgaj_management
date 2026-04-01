@@ -28,6 +28,7 @@ import {
   getOrderItemsCount,
   getOrderStatusClasses,
 } from "../_utils/order.utils";
+import CreateRefundDialog from "@/app/Dashboard/Refunds/_component/CreateRefundDialog";
 
 type OrderDetailsDialogProps = {
   order: OrderListItem;
@@ -53,6 +54,11 @@ export default function OrderDetailsDialog({
   });
 
   const resolvedOrder = orderDetailsQuery.data?.data ?? order;
+  const canCreateRefund =
+    resolvedOrder.status !== "CANCELLED" &&
+    (role === UserRole.SUPER_ADMIN ||
+      role === UserRole.STORE_ADMIN ||
+      role === UserRole.CASHIER);
 
   const cancelOrderMutation = useMutation({
     mutationFn: () => orderService.cancel(order.id),
@@ -116,6 +122,12 @@ export default function OrderDetailsDialog({
                   >
                     {resolvedOrder.status}
                   </Badge>
+                  {canCreateRefund && (
+                    <CreateRefundDialog
+                      trigger={<Button variant="outline">Create Refund</Button>}
+                      items={resolvedOrder.items}
+                    />
+                  )}
                   {canCancel && (
                     <Button
                       variant="outline"
@@ -219,6 +231,8 @@ export default function OrderDetailsDialog({
                       <th className="px-4 py-3 font-medium">Product</th>
                       <th className="px-4 py-3 font-medium">SKU</th>
                       <th className="px-4 py-3 font-medium">Category</th>
+                      <th className="px-4 py-3 font-medium">RFID</th>
+                      <th className="px-4 py-3 text-right font-medium">Weight</th>
                       <th className="px-4 py-3 text-right font-medium">Qty</th>
                       <th className="px-4 py-3 text-right font-medium">Rate</th>
                       <th className="px-4 py-3 text-right font-medium">Tax</th>
@@ -232,6 +246,12 @@ export default function OrderDetailsDialog({
                         <td className="px-4 py-3 text-muted-foreground">{item.sku}</td>
                         <td className="px-4 py-3">
                           <Badge variant="outline">{item.category}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {item.rfid || "N/A"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {item.actualWeight?.toFixed(3) ?? "0.000"} g
                         </td>
                         <td className="px-4 py-3 text-right">{item.quantity}</td>
                         <td className="px-4 py-3 text-right">

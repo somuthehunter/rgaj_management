@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   Wallet,
   X,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUser, clearSession } from "@/services/session.service";
@@ -41,6 +42,7 @@ const routeIcons = {
   Inventory: Boxes,
   Products: Package,
   Sell: Wallet,
+  Refunds: RotateCcw,
   Transactions: ReceiptText,
   Statistics: BarChart3,
 } as const;

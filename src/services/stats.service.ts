@@ -11,6 +11,12 @@ type InvoiceListApiItem = {
   id: string;
   totalAmount?: number;
   createdAt?: string;
+  status?: string;
+  store?: {
+    id?: string;
+    name?: string;
+  } | null;
+  storeId?: string;
 };
 
 type InvoiceListResponse = {
@@ -20,6 +26,33 @@ type InvoiceListResponse = {
     total?: number;
   };
 };
+
+type RefundListApiItem = {
+  id: string;
+  refundAmount?: number;
+  status?: string;
+  approvedAt?: string | null;
+  updatedAt?: string;
+  createdAt?: string;
+  storeId?: string;
+  invoice?: {
+    storeId?: string;
+    store?: {
+      id?: string;
+      name?: string;
+    };
+  };
+};
+
+type RefundListResponse = {
+  success: boolean;
+  data?: RefundListApiItem[];
+  pagination?: {
+    total?: number;
+  };
+};
+
+const PAGE_LIMIT = 100;
 
 const formatMonthLabel = (date: Date) =>
   new Intl.DateTimeFormat("en-IN", { month: "short" }).format(date);
@@ -60,7 +93,22 @@ const getChangePercent = (current: number, previous: number) => {
 const buildInvoicesQuery = (params?: Record<string, string>) => {
   const query = new URLSearchParams({
     page: "1",
-    limit: "100",
+    limit: String(PAGE_LIMIT),
+  });
+
+  Object.entries(params ?? {}).forEach(([key, value]) => {
+    if (value) {
+      query.set(key, value);
+    }
+  });
+
+  return query.toString();
+};
+
+const buildRefundsQuery = (params?: Record<string, string>) => {
+  const query = new URLSearchParams({
+    page: "1",
+    limit: String(PAGE_LIMIT),
   });
 
   Object.entries(params ?? {}).forEach(([key, value]) => {
@@ -85,17 +133,100 @@ const getScopedStoreId = () => {
 
 const getCurrentRole = () => normalizeRole(getUser()?.role);
 
-const fetchInvoices = async (params?: Record<string, string>) => {
+const fetchInvoicesPage = async (params?: Record<string, string>) => {
   const query = buildInvoicesQuery(params);
   return (await getService(
     `${endpoints.billing.invoices}?${query}`,
   )) as InvoiceListResponse;
 };
 
-const summarizeInvoices = (invoices: InvoiceListApiItem[]) => ({
-  totalInvoices: invoices.length,
-  totalSales: invoices.reduce((sum, invoice) => sum + (invoice.totalAmount ?? 0), 0),
+const fetchRefundsPage = async (params?: Record<string, string>) => {
+  const query = buildRefundsQuery(params);
+  return (await getService(
+    `${endpoints.refunds.getAll}?${query}`,
+  )) as RefundListResponse;
+};
+
+const fetchAllInvoices = async (params?: Record<string, string>) => {
+  const rows: InvoiceListApiItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const res = await fetchInvoicesPage({
+      ...params,
+      page: String(page),
+      limit: String(PAGE_LIMIT),
+    });
+    const batch = res.data ?? [];
+    rows.push(...batch);
+
+    if (batch.length < PAGE_LIMIT) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return rows;
+};
+
+const fetchAllRefunds = async (params?: Record<string, string>) => {
+  const rows: RefundListApiItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const res = await fetchRefundsPage({
+      ...params,
+      page: String(page),
+      limit: String(PAGE_LIMIT),
+    });
+    const batch = res.data ?? [];
+    rows.push(...batch);
+
+    if (batch.length < PAGE_LIMIT) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return rows;
+};
+
+const isRefundCounted = (refund: RefundListApiItem) =>
+  refund.status === "APPROVED" || refund.status === "COMPLETED";
+
+const isInvoiceCounted = (invoice: InvoiceListApiItem) => invoice.status !== "CANCELLED";
+
+const getRefundEffectiveDate = (refund: RefundListApiItem) =>
+  refund.approvedAt ?? refund.updatedAt ?? refund.createdAt ?? "";
+
+const summarizeInvoices = (invoices: InvoiceListApiItem[]) => {
+  const countedInvoices = invoices.filter(isInvoiceCounted);
+
+  return {
+    totalInvoices: countedInvoices.length,
+    totalSales: countedInvoices.reduce((sum, invoice) => sum + (invoice.totalAmount ?? 0), 0),
+  };
+};
+
+const summarizeRefunds = (refunds: RefundListApiItem[]) => ({
+  totalRefunded: refunds
+    .filter(isRefundCounted)
+    .reduce((sum, refund) => sum + (refund.refundAmount ?? 0), 0),
 });
+
+const groupRefundsByStore = (refunds: RefundListApiItem[]) => {
+  const totals = new Map<string, number>();
+
+  refunds.filter(isRefundCounted).forEach((refund) => {
+    const storeId = refund.storeId ?? refund.invoice?.storeId ?? refund.invoice?.store?.id ?? "";
+    if (!storeId) return;
+    totals.set(storeId, (totals.get(storeId) ?? 0) + (refund.refundAmount ?? 0));
+  });
+
+  return totals;
+};
 
 export const statsService = {
   getDashboardStats: async (): Promise<{ success: boolean; data: DashboardStats }> => {
@@ -103,52 +234,54 @@ export const statsService = {
     const user = getUser();
     const role = getCurrentRole();
     const isCashier = role === UserRole.CASHIER;
+    const [allInvoices, allRefunds, currentInvoices, previousInvoices, currentRefunds, previousRefunds, storesRes, productsRes] =
+      await Promise.all([
+        fetchAllInvoices({
+          ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+          ...(isCashier ? { cashierId: user?.id ?? "" } : {}),
+        }),
+        fetchAllRefunds(scopedStoreId ? { storeId: scopedStoreId } : undefined),
+        fetchAllInvoices({
+          ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+          ...(isCashier ? { cashierId: user?.id ?? "" } : {}),
+          ...getPeriodRange(30, 0),
+        }),
+        fetchAllInvoices({
+          ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+          ...(isCashier ? { cashierId: user?.id ?? "" } : {}),
+          ...getPeriodRange(30, 30),
+        }),
+        fetchAllRefunds({
+          ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+          ...getPeriodRange(30, 0),
+        }),
+        fetchAllRefunds({
+          ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+          ...getPeriodRange(30, 30),
+        }),
+        role === UserRole.SUPER_ADMIN
+          ? storeService.getAll({ page: 1, limit: 10 })
+          : Promise.resolve({ total: scopedStoreId ? 1 : 0 }),
+        productService.getAll({ page: 1, limit: 10, isActive: true }),
+      ]);
 
-    const [salesCurrentRes, salesPreviousRes, storesRes, productsRes] = await Promise.all([
-      isCashier
-        ? fetchInvoices({
-            storeId: scopedStoreId,
-            cashierId: user?.id ?? "",
-            ...getPeriodRange(30, 0),
-          })
-        : auditService.getSalesReport({
-            storeId: scopedStoreId,
-            ...getPeriodRange(30, 0),
-          }),
-      isCashier
-        ? fetchInvoices({
-            storeId: scopedStoreId,
-            cashierId: user?.id ?? "",
-            ...getPeriodRange(30, 30),
-          })
-        : auditService.getSalesReport({
-            storeId: scopedStoreId,
-            ...getPeriodRange(30, 30),
-          }),
-      role === UserRole.SUPER_ADMIN
-        ? storeService.getAll({ page: 1, limit: 10 })
-        : Promise.resolve({ total: scopedStoreId ? 1 : 0 }),
-      productService.getAll({ page: 1, limit: 10, isActive: true }),
-    ]);
-
-    const currentSummary = isCashier
-      ? summarizeInvoices(salesCurrentRes.data ?? [])
-      : salesCurrentRes.data.summary;
-    const previousSummary = isCashier
-      ? summarizeInvoices(salesPreviousRes.data ?? [])
-      : salesPreviousRes.data.summary;
+    const allSummary = summarizeInvoices(allInvoices);
+    const allRefundSummary = summarizeRefunds(allRefunds);
+    const currentSummary = summarizeInvoices(currentInvoices);
+    const previousSummary = summarizeInvoices(previousInvoices);
+    const currentRefundSummary = summarizeRefunds(currentRefunds);
+    const previousRefundSummary = summarizeRefunds(previousRefunds);
+    const currentNetRevenue = currentSummary.totalSales - currentRefundSummary.totalRefunded;
+    const previousNetRevenue = previousSummary.totalSales - previousRefundSummary.totalRefunded;
 
     return {
       success: true,
       data: {
         totalStores: storesRes.total ?? 0,
         totalProducts: productsRes.total ?? 0,
-        totalOrders: currentSummary.totalInvoices,
-        totalRevenue: currentSummary.totalSales,
-        revenueChange: getChangePercent(
-          currentSummary.totalSales,
-          previousSummary.totalSales,
-        ),
+        totalOrders: allSummary.totalInvoices,
+        totalRevenue: allSummary.totalSales - allRefundSummary.totalRefunded,
+        revenueChange: getChangePercent(currentNetRevenue, previousNetRevenue),
         ordersChange: getChangePercent(
           currentSummary.totalInvoices,
           previousSummary.totalInvoices,
@@ -161,26 +294,41 @@ export const statsService = {
     const scopedStoreId = getScopedStoreId();
     const user = getUser();
     const role = getCurrentRole();
-    const invoicesRes = await fetchInvoices({
-      ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
-      ...(role === UserRole.CASHIER ? { cashierId: user?.id ?? "" } : {}),
-    });
+    const [invoices, refunds] = await Promise.all([
+      fetchAllInvoices({
+        ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
+        ...(role === UserRole.CASHIER ? { cashierId: user?.id ?? "" } : {}),
+      }),
+      fetchAllRefunds(scopedStoreId ? { storeId: scopedStoreId } : undefined),
+    ]);
     const buckets = getMonthBuckets(6);
-    const totals = new Map<string, number>(buckets.map((bucket) => [bucket.key, 0]));
+    const invoiceTotals = new Map<string, number>(buckets.map((bucket) => [bucket.key, 0]));
+    const refundTotals = new Map<string, number>(buckets.map((bucket) => [bucket.key, 0]));
 
-    (invoicesRes.data ?? []).forEach((invoice) => {
+    invoices.filter(isInvoiceCounted).forEach((invoice) => {
       if (!invoice.createdAt) return;
       const createdAt = new Date(invoice.createdAt);
       const key = `${createdAt.getFullYear()}-${createdAt.getMonth()}`;
-      if (!totals.has(key)) return;
-      totals.set(key, (totals.get(key) ?? 0) + (invoice.totalAmount ?? 0));
+      if (!invoiceTotals.has(key)) return;
+      invoiceTotals.set(key, (invoiceTotals.get(key) ?? 0) + (invoice.totalAmount ?? 0));
+    });
+
+    refunds.filter(isRefundCounted).forEach((refund) => {
+      const effectiveDate = getRefundEffectiveDate(refund);
+      if (!effectiveDate) return;
+      const createdAt = new Date(effectiveDate);
+      const key = `${createdAt.getFullYear()}-${createdAt.getMonth()}`;
+      if (!refundTotals.has(key)) return;
+      refundTotals.set(key, (refundTotals.get(key) ?? 0) + (refund.refundAmount ?? 0));
     });
 
     return {
       success: true,
       data: buckets.map((bucket) => ({
         name: bucket.label,
-        value: Number((totals.get(bucket.key) ?? 0).toFixed(2)),
+        value: Number(
+          ((invoiceTotals.get(bucket.key) ?? 0) - (refundTotals.get(bucket.key) ?? 0)).toFixed(2),
+        ),
       })),
     };
   },
@@ -189,14 +337,14 @@ export const statsService = {
     const scopedStoreId = getScopedStoreId();
     const user = getUser();
     const role = getCurrentRole();
-    const invoicesRes = await fetchInvoices({
+    const invoices = await fetchAllInvoices({
       ...(scopedStoreId ? { storeId: scopedStoreId } : {}),
       ...(role === UserRole.CASHIER ? { cashierId: user?.id ?? "" } : {}),
     });
     const buckets = getMonthBuckets(6);
     const counts = new Map<string, number>(buckets.map((bucket) => [bucket.key, 0]));
 
-    (invoicesRes.data ?? []).forEach((invoice) => {
+    invoices.filter(isInvoiceCounted).forEach((invoice) => {
       if (!invoice.createdAt) return;
       const createdAt = new Date(invoice.createdAt);
       const key = `${createdAt.getFullYear()}-${createdAt.getMonth()}`;
@@ -219,36 +367,43 @@ export const statsService = {
     const role = getCurrentRole();
 
     if (role === UserRole.CASHIER) {
-      const invoicesRes = await fetchInvoices({
-        storeId: scopedStoreId,
-        cashierId: user?.id ?? "",
-      });
-      const total = (invoicesRes.data ?? []).reduce(
+      const [invoices, refunds] = await Promise.all([
+        fetchAllInvoices({
+          storeId: scopedStoreId,
+          cashierId: user?.id ?? "",
+        }),
+        fetchAllRefunds(scopedStoreId ? { storeId: scopedStoreId } : undefined),
+      ]);
+      const grossTotal = invoices.filter(isInvoiceCounted).reduce(
         (sum, invoice) => sum + (invoice.totalAmount ?? 0),
         0,
       );
+      const refundTotal = summarizeRefunds(refunds).totalRefunded;
 
       return {
         success: true,
         data: [
           {
-            name: "My Sales",
-            value: total,
+            name: "My Net Sales",
+            value: grossTotal - refundTotal,
           },
         ],
       };
     }
 
-    const salesRes = await auditService.getSalesReport({
-      storeId: scopedStoreId,
-      ...getPeriodRange(30, 0),
-    });
+    const [salesRes, refunds] = await Promise.all([
+      auditService.getSalesReport({
+        storeId: scopedStoreId,
+      }),
+      fetchAllRefunds(scopedStoreId ? { storeId: scopedStoreId } : undefined),
+    ]);
+    const refundsByStore = groupRefundsByStore(refunds);
 
     return {
       success: true,
       data: salesRes.data.byStore.map((item) => ({
         name: item.storeName,
-        value: item.totalSales,
+        value: item.totalSales - (refundsByStore.get(item.storeId) ?? 0),
       })),
     };
   },

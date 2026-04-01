@@ -51,6 +51,9 @@ type InvoiceDetailApiItem = {
   gstRate?: number;
   gstAmount?: number;
   totalAmount?: number;
+  stoneWeight?: number;
+  rfid?: string;
+  isReturned?: boolean;
 };
 
 type InvoiceDetailApiResponse = {
@@ -93,6 +96,10 @@ const normalizeLineItem = (item: InvoiceDetailApiItem): OrderLineItem => ({
   sku: item.sku ?? "N/A",
   category: item.purity ?? "Jewellery",
   quantity: 1,
+  actualWeight: item.actualWeight ?? 0,
+  stoneWeight: item.stoneWeight ?? 0,
+  rfid: item.rfid ?? "",
+  isReturned: item.isReturned ?? false,
   unitPrice: (item.goldPrice ?? 0) + (item.makingCharge ?? 0),
   taxRate: item.gstRate ?? 0,
   lineSubtotal: (item.goldPrice ?? 0) + (item.makingCharge ?? 0),

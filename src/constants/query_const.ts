@@ -57,6 +57,14 @@ const endpoints = {
     inventoryReport: `/audit/reports/inventory`,
     storeReport: (storeId: string) => `/audit/reports/store/${storeId}`,
   },
+
+  refunds: {
+    create: `/refunds`,
+    getAll: `/refunds`,
+    getById: (id: string) => `/refunds/${id}`,
+    approve: (id: string) => `/refunds/${id}/approve`,
+    reject: (id: string) => `/refunds/${id}/reject`,
+  },
 };
 
 export default endpoints;

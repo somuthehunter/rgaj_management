@@ -16,6 +16,7 @@ import { getUser } from "@/services/session.service";
 import { normalizeRole } from "@/lib/auth";
 import { UserRole } from "@/types";
 import { auditService } from "@/services/audit.service";
+import { refundService } from "@/services/refund.service";
 import { storeService } from "@/services/store.service";
 import { formatOrderCurrency, formatOrderDate } from "../Orders/_utils/order.utils";
 import {
@@ -32,6 +33,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { RefundListItem } from "@/types/refund";
 
 const chartColors = [
   "hsl(var(--primary))",
@@ -39,6 +41,11 @@ const chartColors = [
   "hsl(var(--primary) / 0.65)",
   "hsl(var(--primary) / 0.5)",
 ];
+
+const REFUND_PAGE_LIMIT = 100;
+
+const getRefundEffectiveDate = (refund: RefundListItem) =>
+  refund.approvedAt ?? refund.updatedAt ?? refund.createdAt;
 
 export default function StatisticsPage() {
   const [selectedStoreId, setSelectedStoreId] = useState("");
@@ -100,12 +107,75 @@ export default function StatisticsPage() {
     enabled: Boolean(selectedStoreId),
   });
 
+  const refundsQuery = useQuery({
+    queryKey: ["statistics-refunds", selectedStoreId, fromDate, toDate],
+    queryFn: async () => {
+      const rows: RefundListItem[] = [];
+      let page = 1;
+
+      while (true) {
+        const res = await refundService.getAll({
+          fromDate,
+          toDate,
+          page,
+          limit: REFUND_PAGE_LIMIT,
+        });
+
+        rows.push(...res.data);
+
+        if (res.data.length < REFUND_PAGE_LIMIT) {
+          break;
+        }
+
+        page += 1;
+      }
+
+      return rows;
+    },
+  });
+
   const salesData = salesReportQuery.data?.data;
   const inventoryData = inventoryReportQuery.data?.data ?? [];
   const storeReport = storeReportQuery.data?.data;
-  const salesByStoreChart = (salesData?.byStore ?? []).map((item) => ({
+
+  const refunds = (refundsQuery.data ?? []).filter((refund) => {
+    if (refund.status !== "APPROVED" && refund.status !== "COMPLETED") {
+      return false;
+    }
+
+    if (selectedStoreId && isSuperAdmin && refund.storeId !== selectedStoreId) {
+      return false;
+    }
+
+    const effectiveDate = getRefundEffectiveDate(refund);
+    if (fromDate && effectiveDate < fromDate) {
+      return false;
+    }
+    if (toDate && effectiveDate > toDate) {
+      return false;
+    }
+
+    return true;
+  });
+
+  const refundTotal = refunds.reduce((sum, refund) => sum + refund.refundAmount, 0);
+  const refundsByStore = new Map<string, number>();
+
+  refunds.forEach((refund) => {
+    refundsByStore.set(
+      refund.storeId,
+      (refundsByStore.get(refund.storeId) ?? 0) + refund.refundAmount,
+    );
+  });
+
+  const netSalesTotal = (salesData?.summary.totalSales ?? 0) - refundTotal;
+  const salesByStore = (salesData?.byStore ?? []).map((item) => ({
+    ...item,
+    netSales: item.totalSales - (refundsByStore.get(item.storeId) ?? 0),
+  }));
+  const salesByStoreChart = salesByStore.map((item) => ({
     name: item.storeName,
-    sales: item.totalSales,
+    sales: item.netSales,
     gst: item.totalGst,
   }));
   const paymentMethodChart = (salesData?.byPaymentMethod ?? []).map((item) => ({
@@ -180,27 +250,37 @@ export default function StatisticsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card>
-          <CardHeader><CardTitle className="text-sm">Total Invoices</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-sm">Total Invoices</CardTitle>
+          </CardHeader>
           <CardContent className="text-2xl font-bold">
             {salesReportQuery.isLoading ? "..." : salesData?.summary.totalInvoices ?? 0}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Total Sales</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-sm">Net Sales</CardTitle>
+          </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {salesReportQuery.isLoading ? "..." : formatOrderCurrency(salesData?.summary.totalSales ?? 0)}
+            {salesReportQuery.isLoading ? "..." : formatOrderCurrency(netSalesTotal)}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Total GST</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-sm">Total GST</CardTitle>
+          </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {salesReportQuery.isLoading ? "..." : formatOrderCurrency(salesData?.summary.totalGst ?? 0)}
+            {salesReportQuery.isLoading
+              ? "..."
+              : formatOrderCurrency(salesData?.summary.totalGst ?? 0)}
           </CardContent>
         </Card>
         <Card>
-          <CardHeader><CardTitle className="text-sm">Subtotal</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="text-sm">Total Refunded</CardTitle>
+          </CardHeader>
           <CardContent className="text-2xl font-bold">
-            {salesReportQuery.isLoading ? "..." : formatOrderCurrency(salesData?.summary.totalSubtotal ?? 0)}
+            {refundsQuery.isLoading ? "..." : formatOrderCurrency(refundTotal)}
           </CardContent>
         </Card>
       </div>
@@ -242,10 +322,7 @@ export default function StatisticsPage() {
                     paddingAngle={2}
                   >
                     {paymentMethodChart.map((entry, index) => (
-                      <Cell
-                        key={entry.name}
-                        fill={chartColors[index % chartColors.length]}
-                      />
+                      <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => formatOrderCurrency(value)} />
@@ -272,20 +349,24 @@ export default function StatisticsPage() {
                   <tr className="border-b bg-muted/40 text-left">
                     <th className="px-4 py-3 font-medium">Store</th>
                     <th className="px-4 py-3 font-medium">Invoices</th>
-                    <th className="px-4 py-3 text-right font-medium">Sales</th>
+                    <th className="px-4 py-3 text-right font-medium">Net Sales</th>
                     <th className="px-4 py-3 text-right font-medium">GST</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(salesData?.byStore ?? []).map((item) => (
+                  {salesByStore.map((item) => (
                     <tr key={item.storeId} className="border-b last:border-b-0">
                       <td className="px-4 py-3">
                         <p className="font-medium">{item.storeName}</p>
                         <p className="text-xs text-muted-foreground">{item.storeCode}</p>
                       </td>
                       <td className="px-4 py-3">{item.invoiceCount}</td>
-                      <td className="px-4 py-3 text-right">{formatOrderCurrency(item.totalSales)}</td>
-                      <td className="px-4 py-3 text-right">{formatOrderCurrency(item.totalGst)}</td>
+                      <td className="px-4 py-3 text-right">
+                        {formatOrderCurrency(item.netSales)}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {formatOrderCurrency(item.totalGst)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -312,7 +393,9 @@ export default function StatisticsPage() {
                   <tr key={item.method} className="border-b last:border-b-0">
                     <td className="px-4 py-3">{item.method}</td>
                     <td className="px-4 py-3">{item.count}</td>
-                    <td className="px-4 py-3 text-right">{formatOrderCurrency(item.total)}</td>
+                    <td className="px-4 py-3 text-right">
+                      {formatOrderCurrency(item.total)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -340,23 +423,41 @@ export default function StatisticsPage() {
             <>
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <Card>
-                  <CardHeader><CardTitle className="text-sm">Store</CardTitle></CardHeader>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Store</CardTitle>
+                  </CardHeader>
                   <CardContent>
                     <p className="font-semibold">{storeReport.store.name}</p>
-                    <p className="text-sm text-muted-foreground">{storeReport.store.code} • {storeReport.store.city}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {storeReport.store.code} - {storeReport.store.city}
+                    </p>
                   </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm">Invoices</CardTitle></CardHeader>
-                  <CardContent className="text-2xl font-bold">{storeReport.sales.invoiceCount}</CardContent>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Invoices</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-2xl font-bold">
+                    {storeReport.sales.invoiceCount}
+                  </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm">Store Sales</CardTitle></CardHeader>
-                  <CardContent className="text-2xl font-bold">{formatOrderCurrency(storeReport.sales.totalSales)}</CardContent>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Net Store Sales</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-2xl font-bold">
+                    {formatOrderCurrency(
+                      storeReport.sales.totalSales - storeReport.refunds.totalRefunded,
+                    )}
+                  </CardContent>
                 </Card>
                 <Card>
-                  <CardHeader><CardTitle className="text-sm">Refunded</CardTitle></CardHeader>
-                  <CardContent className="text-2xl font-bold">{formatOrderCurrency(storeReport.refunds.totalRefunded)}</CardContent>
+                  <CardHeader>
+                    <CardTitle className="text-sm">Refunded</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-2xl font-bold">
+                    {formatOrderCurrency(storeReport.refunds.totalRefunded)}
+                  </CardContent>
                 </Card>
               </div>
 
@@ -409,11 +510,17 @@ export default function StatisticsPage() {
                         <tr key={item.id} className="border-b last:border-b-0">
                           <td className="px-4 py-3">
                             <p className="font-medium">{item.productName}</p>
-                            <p className="text-xs text-muted-foreground">{item.sku} • {item.category}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.sku} - {item.category}
+                            </p>
                           </td>
-                          <td className="px-4 py-3 text-right">{item.allocatedWeight.toFixed(3)} g</td>
+                          <td className="px-4 py-3 text-right">
+                            {item.allocatedWeight.toFixed(3)} g
+                          </td>
                           <td className="px-4 py-3 text-right">{item.soldWeight.toFixed(3)} g</td>
-                          <td className="px-4 py-3 text-right">{item.availableWeight.toFixed(3)} g</td>
+                          <td className="px-4 py-3 text-right">
+                            {item.availableWeight.toFixed(3)} g
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -442,10 +549,14 @@ export default function StatisticsPage() {
                         <td className="px-4 py-3">
                           {item.customerName || "Walk-in Customer"}
                           {item.customerPhone ? (
-                            <p className="text-xs text-muted-foreground">{item.customerPhone}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.customerPhone}
+                            </p>
                           ) : null}
                         </td>
-                        <td className="px-4 py-3 text-right">{formatOrderCurrency(item.totalAmount)}</td>
+                        <td className="px-4 py-3 text-right">
+                          {formatOrderCurrency(item.totalAmount)}
+                        </td>
                         <td className="px-4 py-3">{formatOrderDate(item.createdAt)}</td>
                       </tr>
                     ))}
@@ -483,8 +594,16 @@ export default function StatisticsPage() {
                       <YAxis fontSize={12} />
                       <Tooltip />
                       <Bar dataKey="central" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="allocated" fill="hsl(var(--primary) / 0.7)" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="sold" fill="hsl(var(--primary) / 0.45)" radius={[4, 4, 0, 0]} />
+                      <Bar
+                        dataKey="allocated"
+                        fill="hsl(var(--primary) / 0.7)"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <Bar
+                        dataKey="sold"
+                        fill="hsl(var(--primary) / 0.45)"
+                        radius={[4, 4, 0, 0]}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -504,12 +623,20 @@ export default function StatisticsPage() {
                       <tr key={item.productId} className="border-b last:border-b-0">
                         <td className="px-4 py-3">
                           <p className="font-medium">{item.productName}</p>
-                          <p className="text-xs text-muted-foreground">{item.sku} • {item.category} • {item.purity}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {item.sku} - {item.category} - {item.purity}
+                          </p>
                         </td>
-                        <td className="px-4 py-3 text-right">{item.centralAvailableWeight.toFixed(3)} g</td>
-                        <td className="px-4 py-3 text-right">{item.allocatedWeight.toFixed(3)} g</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.centralAvailableWeight.toFixed(3)} g
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {item.allocatedWeight.toFixed(3)} g
+                        </td>
                         <td className="px-4 py-3 text-right">{item.soldWeight.toFixed(3)} g</td>
-                        <td className="px-4 py-3 text-right">{item.returnedWeight.toFixed(3)} g</td>
+                        <td className="px-4 py-3 text-right">
+                          {item.returnedWeight.toFixed(3)} g
+                        </td>
                       </tr>
                     ))}
                   </tbody>

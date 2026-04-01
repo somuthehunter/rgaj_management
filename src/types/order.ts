@@ -7,6 +7,10 @@ export type OrderLineItem = {
   sku: string;
   category: string;
   quantity: number;
+  actualWeight?: number;
+  stoneWeight?: number;
+  rfid?: string;
+  isReturned?: boolean;
   unitPrice: number;
   taxRate: number;
   lineSubtotal: number;
