@@ -42,6 +42,14 @@ const endpoints = {
     summary: `/inventory/summary`,
     byStore: (storeId: string) => `/inventory/store/${storeId}`,
   },
+
+  billing: {
+    invoices: `/billing/invoices`,
+    invoiceById: (id: string) => `/billing/invoices/${id}`,
+    cancelInvoice: (id: string) => `/billing/invoices/${id}/cancel`,
+    customers: `/billing/customers`,
+    customerById: (id: string) => `/billing/customers/${id}`,
+  },
 };
 
 export default endpoints;

@@ -1,157 +1,219 @@
-import { OrderStatus } from "@/types";
-import { addMockOrder, getMockOrdersSnapshot } from "@/services/order.service";
-import { addMockTransaction } from "@/services/transaction.service";
+import { getService, postService } from "./service";
+import endpoints from "@/constants/query_const";
 import {
   BillGenerationResult,
+  BillingInvoice,
+  BillingInvoiceItem,
+  BillingInvoiceStore,
+  BillingPaymentMethod,
   CreateBillPayload,
   SellableProduct,
 } from "@/types/billing";
-import { OrderLineItem } from "@/types/order";
 
-let mockSellableProducts: SellableProduct[] = [
-  {
-    id: "prod-1",
-    name: "Diamond Earrings 28K",
-    sku: "EARR-28K-71534",
-    category: "Diamond Collection",
-    unitPrice: 18500,
-    gstRate: 3,
-    availableQuantity: 8,
-  },
-  {
-    id: "prod-3",
-    name: "Gold Necklace 22K Traditional",
-    sku: "NECK-22K-001",
-    category: "Gold Jewellery",
-    unitPrice: 38500,
-    gstRate: 3,
-    availableQuantity: 5,
-  },
-  {
-    id: "prod-6",
-    name: "Gold Bangles 22K Pair",
-    sku: "BANG-22K-001",
-    category: "Gold Jewellery",
-    unitPrice: 47200,
-    gstRate: 3,
-    availableQuantity: 4,
-  },
-  {
-    id: "prod-7",
-    name: "Temple Design Pendant",
-    sku: "TEMP-PEND-014",
-    category: "Temple Design",
-    unitPrice: 16800,
-    gstRate: 3,
-    availableQuantity: 10,
-  },
-];
+type StoreInventoryApiItem = {
+  id: string;
+  productId: string;
+  availableWeight?: number;
+  allocatedStones?: number;
+  soldStones?: number;
+  returnedStones?: number;
+  stoneWeight?: number;
+  product?: {
+    id: string;
+    name?: string;
+    sku?: string;
+    category?: string;
+    purity?: string;
+    hsnCode?: string;
+    makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
+    makingCharge?: number;
+    gstRate?: number;
+  };
+};
 
-const delay = async () =>
-  new Promise((resolve) => window.setTimeout(resolve, 120));
+type PaginatedApiResponse<T> = {
+  success: boolean;
+  data?: T[];
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  message?: string;
+};
+
+type InvoiceApiItem = {
+  id: string;
+  invoiceId?: string;
+  productId?: string;
+  productName?: string;
+  sku?: string;
+  purity?: string;
+  hsnCode?: string;
+  allocatedWeight?: number | null;
+  actualWeight?: number;
+  stoneCount?: number;
+  stoneWeight?: number;
+  netGoldWeight?: number;
+  ratePerGram?: number;
+  goldPrice?: number;
+  makingCharge?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  rfid?: string;
+  isReturned?: boolean;
+  createdAt?: string;
+};
+
+type InvoiceApiResponse = {
+  success: boolean;
+  data?: {
+    id: string;
+    invoiceNumber?: string;
+    storeId?: string;
+    customerId?: string | null;
+    subtotal?: number;
+    gstAmount?: number;
+    totalAmount?: number;
+    paymentMethod?: BillingPaymentMethod;
+    status?: string;
+    cashierId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    items?: InvoiceApiItem[];
+    customer?: {
+      id?: string;
+      name?: string;
+      phone?: string;
+      email?: string | null;
+      address?: string | null;
+      createdAt?: string;
+      updatedAt?: string;
+    } | null;
+    store?: {
+      id?: string;
+      name?: string;
+      code?: string;
+    } | null;
+  };
+  message?: string;
+};
+
+const normalizeSellableProduct = (item: StoreInventoryApiItem): SellableProduct => ({
+  id: item.product?.id ?? item.productId,
+  name: item.product?.name ?? "Unnamed Product",
+  sku: item.product?.sku ?? "N/A",
+  category: item.product?.category ?? "",
+  purity: item.product?.purity ?? "",
+  hsnCode: item.product?.hsnCode ?? "",
+  makingChargeType: item.product?.makingChargeType,
+  makingCharge: item.product?.makingCharge ?? 0,
+  gstRate: item.product?.gstRate ?? 0,
+  availableWeight: item.availableWeight ?? 0,
+  availableStones: Math.max(
+    0,
+    (item.allocatedStones ?? 0) - (item.soldStones ?? 0) + (item.returnedStones ?? 0),
+  ),
+  stoneWeight: item.stoneWeight ?? 0,
+});
+
+const normalizeInvoiceStore = (
+  store: InvoiceApiResponse["data"] extends infer T
+    ? T extends { store?: infer S }
+      ? S
+      : never
+    : never,
+  fallbackStoreId: string,
+): BillingInvoiceStore | null => {
+  if (!store) return null;
+
+  return {
+    id: store.id ?? fallbackStoreId,
+    name: store.name ?? "Store",
+    code: store.code ?? "N/A",
+  };
+};
+
+const normalizeInvoiceItem = (item: InvoiceApiItem, invoiceId: string): BillingInvoiceItem => ({
+  id: item.id,
+  invoiceId: item.invoiceId ?? invoiceId,
+  productId: item.productId ?? "",
+  productName: item.productName ?? "Unnamed Product",
+  sku: item.sku ?? "N/A",
+  purity: item.purity ?? "",
+  hsnCode: item.hsnCode ?? "",
+  allocatedWeight: item.allocatedWeight ?? null,
+  actualWeight: item.actualWeight ?? 0,
+  stoneCount: item.stoneCount ?? 0,
+  stoneWeight: item.stoneWeight ?? 0,
+  netGoldWeight: item.netGoldWeight ?? 0,
+  ratePerGram: item.ratePerGram ?? 0,
+  goldPrice: item.goldPrice ?? 0,
+  makingCharge: item.makingCharge ?? 0,
+  gstRate: item.gstRate ?? 0,
+  gstAmount: item.gstAmount ?? 0,
+  totalAmount: item.totalAmount ?? 0,
+  rfid: item.rfid ?? "N/A",
+  isReturned: item.isReturned ?? false,
+  createdAt: item.createdAt ?? new Date().toISOString(),
+});
+
+const normalizeInvoice = (invoice: NonNullable<InvoiceApiResponse["data"]>): BillingInvoice => ({
+  id: invoice.id,
+  invoiceNumber: invoice.invoiceNumber ?? invoice.id,
+  storeId: invoice.storeId ?? "",
+  customerId: invoice.customerId ?? null,
+  subtotal: invoice.subtotal ?? 0,
+  gstAmount: invoice.gstAmount ?? 0,
+  totalAmount: invoice.totalAmount ?? 0,
+  paymentMethod: invoice.paymentMethod ?? "CASH",
+  status: invoice.status ?? "COMPLETED",
+  cashierId: invoice.cashierId ?? "",
+  createdAt: invoice.createdAt ?? new Date().toISOString(),
+  updatedAt: invoice.updatedAt ?? invoice.createdAt ?? new Date().toISOString(),
+  items: (invoice.items ?? []).map((item) => normalizeInvoiceItem(item, invoice.id)),
+  customer: invoice.customer
+    ? {
+        id: invoice.customer.id ?? "",
+        name: invoice.customer.name ?? "Walk-in Customer",
+        phone: invoice.customer.phone ?? "Not provided",
+        email: invoice.customer.email ?? null,
+        address: invoice.customer.address ?? null,
+        createdAt: invoice.customer.createdAt,
+        updatedAt: invoice.customer.updatedAt,
+      }
+    : null,
+  store: normalizeInvoiceStore(invoice.store, invoice.storeId ?? ""),
+});
 
 export const billingService = {
-  // Replace this mock catalog with real sellable-product inventory when the billing API is ready.
-  getSellableProducts: async () => {
-    await delay();
+  getSellableProducts: async (storeId: string) => {
+    const res = (await getService(
+      `${endpoints.inventory.byStore(storeId)}?page=1&limit=100`,
+    )) as PaginatedApiResponse<StoreInventoryApiItem>;
+
     return {
-      success: true,
-      data: mockSellableProducts.map((item) => ({ ...item })),
+      success: res.success,
+      data: (res.data ?? [])
+        .filter((item) => (item.availableWeight ?? 0) > 0 && item.product?.id)
+        .map(normalizeSellableProduct),
+      message: res.message,
     };
   },
 
   generateBill: async (
     payload: CreateBillPayload,
   ): Promise<BillGenerationResult> => {
-    await delay();
+    const res = (await postService(endpoints.billing.invoices, payload)) as InvoiceApiResponse;
 
-    const now = new Date().toISOString();
-    const existingOrders = getMockOrdersSnapshot();
-    const nextOrderNumber = `RGAJ-${1000 + existingOrders.length + 1}`;
+    if (!res.data) {
+      throw new Error("Invoice was not returned by the server.");
+    }
 
-    const lineItems: OrderLineItem[] = payload.items.map((entry, index) => {
-      const product = mockSellableProducts.find((item) => item.id === entry.productId);
-
-      if (!product) {
-        throw new Error("Selected product was not found.");
-      }
-
-      if (entry.quantity > product.availableQuantity) {
-        throw new Error(`Only ${product.availableQuantity} unit(s) available for ${product.name}.`);
-      }
-
-      const lineSubtotal = product.unitPrice * entry.quantity;
-      const lineTax = (lineSubtotal * product.gstRate) / 100;
-
-      return {
-        id: `${nextOrderNumber}-item-${index + 1}`,
-        productId: product.id,
-        productName: product.name,
-        sku: product.sku,
-        category: product.category,
-        quantity: entry.quantity,
-        unitPrice: product.unitPrice,
-        taxRate: product.gstRate,
-        lineSubtotal,
-        lineTax,
-        lineTotal: lineSubtotal + lineTax,
-      };
-    });
-
-    const subtotal = lineItems.reduce((total, item) => total + item.lineSubtotal, 0);
-    const tax = lineItems.reduce((total, item) => total + item.lineTax, 0);
-    const total = subtotal + tax;
-
-    const order = addMockOrder({
-      id: `order-${Date.now()}`,
-      orderNumber: nextOrderNumber,
-      storeId: payload.storeId || "store-1",
-      storeName: payload.storeName || "Main Showroom",
-      customer: {
-        name: payload.customerName,
-        phone: payload.customerPhone,
-        email: payload.customerEmail,
-        address: payload.customerAddress,
-      },
-      items: lineItems,
-      subtotal,
-      tax,
-      total,
-      status: OrderStatus.COMPLETED,
-      paymentMethod: payload.paymentMethod,
-      createdAt: now,
-      notes: payload.notes,
-    });
-
-    mockSellableProducts = mockSellableProducts.map((product) => {
-      const matched = payload.items.find((item) => item.productId === product.id);
-      if (!matched) return product;
-
-      return {
-        ...product,
-        availableQuantity: Math.max(0, product.availableQuantity - matched.quantity),
-      };
-    });
-
-    addMockTransaction({
-      id: `txn-log-${Date.now()}`,
-      eventType: "SELL",
-      module: "Orders",
-      title: "Bill generated and order created",
-      description: `${payload.customerName} order ${nextOrderNumber} was created from the billing page.`,
-      performedBy: payload.performedBy || "System User",
-      role: payload.performerRole || "STORE_ADMIN",
-      storeName: payload.storeName || "Main Showroom",
-      entityName: payload.customerName,
-      referenceId: nextOrderNumber,
-      createdAt: now,
-      metadata: {
-        items: payload.items.length,
-        total,
-        paymentMethod: payload.paymentMethod,
-      },
-    });
-
-    return { order };
+    return {
+      invoice: normalizeInvoice(res.data),
+    };
   },
 };
