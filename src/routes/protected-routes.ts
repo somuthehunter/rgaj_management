@@ -57,7 +57,7 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Transactions",
     label: "Transactions",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN],
   },
   {
     path: "/Dashboard/Statistics",

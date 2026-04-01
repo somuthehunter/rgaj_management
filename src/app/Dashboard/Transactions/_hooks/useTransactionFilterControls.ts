@@ -3,35 +3,48 @@
 import { useMemo } from "react";
 import { SelectControl } from "@/components/shared/ListControlsBar";
 import {
-  TRANSACTION_EVENT_OPTIONS,
+  TRANSACTION_ACTION_OPTIONS,
+  TRANSACTION_ENTITY_OPTIONS,
   TRANSACTION_SORT_OPTIONS,
 } from "../_constants/transaction-controls";
 import {
-  TransactionEventValue,
+  TransactionActionValue,
+  TransactionEntityValue,
   TransactionSortValue,
 } from "../_types/transaction-controls.types";
 
 type Params = {
-  eventFilter: TransactionEventValue;
+  actionFilter: TransactionActionValue;
+  entityFilter: TransactionEntityValue;
   sortValue: TransactionSortValue;
-  setEventFilter: (value: TransactionEventValue) => void;
+  setActionFilter: (value: TransactionActionValue) => void;
+  setEntityFilter: (value: TransactionEntityValue) => void;
   setSortValue: (value: TransactionSortValue) => void;
 };
 
 export const useTransactionFilterControls = ({
-  eventFilter,
+  actionFilter,
+  entityFilter,
   sortValue,
-  setEventFilter,
+  setActionFilter,
+  setEntityFilter,
   setSortValue,
 }: Params) => {
   const selectControls = useMemo<SelectControl[]>(
     () => [
       {
-        id: "transaction-event-filter",
-        label: "Event Type",
-        value: eventFilter,
-        options: TRANSACTION_EVENT_OPTIONS,
-        onValueChange: (value) => setEventFilter(value as TransactionEventValue),
+        id: "transaction-action-filter",
+        label: "Action",
+        value: actionFilter,
+        options: TRANSACTION_ACTION_OPTIONS,
+        onValueChange: (value) => setActionFilter(value as TransactionActionValue),
+      },
+      {
+        id: "transaction-entity-filter",
+        label: "Entity",
+        value: entityFilter,
+        options: TRANSACTION_ENTITY_OPTIONS,
+        onValueChange: (value) => setEntityFilter(value as TransactionEntityValue),
       },
       {
         id: "transaction-sort",
@@ -41,7 +54,7 @@ export const useTransactionFilterControls = ({
         onValueChange: (value) => setSortValue(value as TransactionSortValue),
       },
     ],
-    [eventFilter, setEventFilter, setSortValue, sortValue],
+    [actionFilter, entityFilter, setActionFilter, setEntityFilter, setSortValue, sortValue],
   );
 
   return { selectControls };

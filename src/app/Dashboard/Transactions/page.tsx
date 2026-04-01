@@ -1,6 +1,8 @@
 "use client";
 
 import ListControlsBar from "@/components/shared/ListControlsBar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import TransactionPagination from "./_component/TransactionPagination";
 import TransactionTable from "./_component/TransactionTable";
 import { useTransactionFilterControls } from "./_hooks/useTransactionFilterControls";
@@ -25,11 +27,13 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 
 export default function TransactionsPage() {
   const filters = useTransactionFiltersState();
-  const { data, isLoading } = useTransactions(filters.queryParams);
+  const { data, isLoading, isError, error } = useTransactions(filters.queryParams);
   const { selectControls } = useTransactionFilterControls({
-    eventFilter: filters.eventFilter,
+    actionFilter: filters.actionFilter,
+    entityFilter: filters.entityFilter,
     sortValue: filters.sortValue,
-    setEventFilter: filters.setEventFilter,
+    setActionFilter: filters.setActionFilter,
+    setEntityFilter: filters.setEntityFilter,
     setSortValue: filters.setSortValue,
   });
 
@@ -47,7 +51,7 @@ export default function TransactionsPage() {
         <div>
           <h1 className="text-2xl font-bold">Transactions</h1>
           <p className="text-sm text-muted-foreground">
-            Review system activity logs such as distribute, add product, sell, return, and other events.
+            Review backend audit logs across actions, entities, users, and request context.
           </p>
         </div>
       </div>
@@ -55,13 +59,38 @@ export default function TransactionsPage() {
       <ListControlsBar
         searchValue={filters.searchInput}
         onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search by event, actor, entity, store, or reference ID..."
+        searchPlaceholder="Search by action, entity, entity ID, user ID, or change payload..."
         onReset={filters.resetFilters}
         selectControls={selectControls}
       />
 
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="audit-from-date">From Date</Label>
+          <Input
+            id="audit-from-date"
+            type="date"
+            value={filters.fromDate}
+            onChange={(event) => filters.setFromDate(event.target.value)}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="audit-to-date">To Date</Label>
+          <Input
+            id="audit-to-date"
+            type="date"
+            value={filters.toDate}
+            onChange={(event) => filters.setToDate(event.target.value)}
+          />
+        </div>
+      </div>
+
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load audit logs."}
+        </p>
       ) : (
         <div className="space-y-4">
           <TransactionTable transactions={data?.data} />

@@ -50,6 +50,13 @@ const endpoints = {
     customers: `/billing/customers`,
     customerById: (id: string) => `/billing/customers/${id}`,
   },
+
+  audit: {
+    logs: `/audit/logs`,
+    salesReport: `/audit/reports/sales`,
+    inventoryReport: `/audit/reports/inventory`,
+    storeReport: (storeId: string) => `/audit/reports/store/${storeId}`,
+  },
 };
 
 export default endpoints;

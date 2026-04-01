@@ -1,15 +1,30 @@
-export type TransactionEventValue =
+export type TransactionActionValue =
   | "all"
-  | "ADD_PRODUCT"
-  | "ADD_CATEGORY"
-  | "REMOVE_PRODUCT"
+  | "CREATE"
+  | "UPDATE"
+  | "DELETE"
+  | "ACTIVATE"
+  | "LOGIN"
+  | "LOGOUT"
+  | "ALLOCATE"
   | "SELL"
-  | "RETURN"
-  | "CREATE_USER"
-  | "DISTRIBUTE";
+  | "REFUND"
+  | "CANCEL";
+
+export type TransactionEntityValue =
+  | "all"
+  | "AUTH"
+  | "USER"
+  | "STORE"
+  | "PRODUCT"
+  | "INVENTORY"
+  | "INVOICE"
+  | "CUSTOMER"
+  | "REFUND";
 
 export type TransactionSortValue =
   | "newest"
   | "oldest"
-  | "event-asc"
-  | "actor-asc";
+  | "action-asc"
+  | "entity-asc"
+  | "user-asc";

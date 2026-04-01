@@ -8,7 +8,10 @@ import { TransactionLogItem, TransactionSearchParams } from "@/types/transaction
 
 export const useTransactions = (params?: TransactionSearchParams) => {
   const search = params?.search?.trim() ?? "";
-  const eventType = params?.eventType ?? "";
+  const action = params?.action ?? "";
+  const entity = params?.entity ?? "";
+  const fromDate = params?.fromDate ?? "";
+  const toDate = params?.toDate ?? "";
   const sortBy = params?.sortBy ?? "";
   const sortOrder = params?.sortOrder ?? "";
   const page = params?.page ?? 1;
@@ -18,7 +21,10 @@ export const useTransactions = (params?: TransactionSearchParams) => {
     queryKey: [
       QUERY_KEYS.TRANSACTIONS,
       search,
-      eventType,
+      action,
+      entity,
+      fromDate,
+      toDate,
       sortBy,
       sortOrder,
       page,
@@ -28,14 +34,20 @@ export const useTransactions = (params?: TransactionSearchParams) => {
       search
         ? transactionService.search({
             search,
-            eventType,
+            action,
+            entity,
+            fromDate,
+            toDate,
             sortBy,
             sortOrder,
             page,
             limit,
           })
         : transactionService.getAll({
-            eventType,
+            action,
+            entity,
+            fromDate,
+            toDate,
             sortBy,
             sortOrder,
             page,
