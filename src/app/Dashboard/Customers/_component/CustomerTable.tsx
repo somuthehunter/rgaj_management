@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { CustomerRow, CustomerTableProps } from "../_types/customer-table.types";
 import CustomerDetailsDialog from "./CustomerDetailsDialog";
 import { formatOrderCurrency } from "@/app/Dashboard/Orders/_utils/order.utils";
@@ -54,7 +55,17 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => downloadCustomerLatestBill(customer)}
+            onClick={async () => {
+              try {
+                await downloadCustomerLatestBill(customer);
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to download latest bill.",
+                );
+              }
+            }}
             title="Download latest bill"
           >
             <Download className="h-4 w-4" />

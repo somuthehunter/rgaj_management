@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Eye } from "lucide-react";
 import { CustomerListItem } from "@/types/customer";
+import { customerService } from "@/services/customer.service";
+import { QUERY_KEYS } from "@/constants/query_keys";
 import {
   formatOrderCurrency,
   formatOrderDate,
@@ -32,6 +35,12 @@ export default function CustomerDetailsDialog({
   trigger,
 }: CustomerDetailsDialogProps) {
   const [open, setOpen] = useState(false);
+  const customerDetailsQuery = useQuery({
+    queryKey: [QUERY_KEYS.CUSTOMERS, "detail", customer.id],
+    queryFn: () => customerService.getById(customer.id),
+    enabled: open,
+  });
+  const resolvedCustomer = customerDetailsQuery.data?.data ?? customer;
 
   const fallbackTrigger = useMemo(
     () => (
@@ -52,7 +61,7 @@ export default function CustomerDetailsDialog({
             <DialogHeader className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <DialogTitle>{customer.name}</DialogTitle>
+                  <DialogTitle>{resolvedCustomer.name}</DialogTitle>
                   <DialogDescription>
                     Full customer profile with cumulative order history and purchase summary.
                   </DialogDescription>
@@ -60,7 +69,7 @@ export default function CustomerDetailsDialog({
 
                 <Button
                   variant="outline"
-                  onClick={() => downloadCustomerSummary(customer)}
+                  onClick={() => downloadCustomerSummary(resolvedCustomer)}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Summary
@@ -68,21 +77,30 @@ export default function CustomerDetailsDialog({
               </div>
             </DialogHeader>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {customerDetailsQuery.isLoading ? (
+              <div className="mt-6 text-sm text-muted-foreground">Loading customer details...</div>
+            ) : customerDetailsQuery.isError ? (
+              <div className="mt-6 text-sm text-destructive">
+                {customerDetailsQuery.error instanceof Error
+                  ? customerDetailsQuery.error.message
+                  : "Failed to load customer details."}
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
               <section className="rounded-lg border p-4">
                 <h3 className="text-sm font-semibold">Customer Details</h3>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground">Phone:</span>{" "}
-                    {customer.phone}
+                    {resolvedCustomer.phone}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Email:</span>{" "}
-                    {customer.email || "Not provided"}
+                    {resolvedCustomer.email || "Not provided"}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Address:</span>{" "}
-                    {customer.address || "Not provided"}
+                    {resolvedCustomer.address || "Not provided"}
                   </p>
                 </div>
               </section>
@@ -92,15 +110,15 @@ export default function CustomerDetailsDialog({
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground">Total Purchase:</span>{" "}
-                    {formatOrderCurrency(customer.totalPurchase)}
+                    {formatOrderCurrency(resolvedCustomer.totalPurchase)}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Items Purchased:</span>{" "}
-                    {customer.itemsPurchased}
+                    {resolvedCustomer.itemsPurchased}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Orders Count:</span>{" "}
-                    {customer.ordersCount}
+                    {resolvedCustomer.ordersCount}
                   </p>
                 </div>
               </section>
@@ -110,19 +128,20 @@ export default function CustomerDetailsDialog({
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground">Primary Store:</span>{" "}
-                    {customer.primaryStoreName}
+                    {resolvedCustomer.primaryStoreName || "N/A"}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Stores Visited:</span>{" "}
-                    {customer.storeNames.join(", ")}
+                    {resolvedCustomer.storeNames.join(", ") || "N/A"}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Last Order:</span>{" "}
-                    {formatOrderDate(customer.lastOrderDate)}
+                    {formatOrderDate(resolvedCustomer.lastOrderDate)}
                   </p>
                 </div>
               </section>
-            </div>
+              </div>
+            )}
 
             <section className="mt-6 rounded-lg border">
               <div className="border-b px-4 py-3">
@@ -142,7 +161,7 @@ export default function CustomerDetailsDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {customer.orders.map((order) => (
+                    {resolvedCustomer.orders.map((order) => (
                       <tr key={order.id} className="border-b last:border-b-0">
                         <td className="px-4 py-3 font-medium">{order.orderNumber}</td>
                         <td className="px-4 py-3">{order.storeName}</td>

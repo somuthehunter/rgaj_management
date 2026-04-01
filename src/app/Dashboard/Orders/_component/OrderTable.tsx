@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { OrderRow, OrderTableProps } from "../_types/order-table.types";
 import OrderDetailsDialog from "./OrderDetailsDialog";
+import { orderService } from "@/services/order.service";
 import {
   buildOrderBillMarkup,
   formatOrderCurrency,
@@ -14,8 +16,10 @@ import {
   getOrderStatusClasses,
 } from "../_utils/order.utils";
 
-const downloadOrderBill = (order: OrderRow) => {
-  const markup = buildOrderBillMarkup(order);
+const downloadOrderBill = async (order: OrderRow) => {
+  const detailedOrder =
+    order.items.length > 0 ? order : (await orderService.getById(order.id)).data;
+  const markup = buildOrderBillMarkup(detailedOrder);
   const blob = new Blob([markup], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -77,7 +81,17 @@ export default function OrderTable({ orders }: OrderTableProps) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => downloadOrderBill(order)}
+            onClick={async () => {
+              try {
+                await downloadOrderBill(order);
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to download bill.",
+                );
+              }
+            }}
           >
             <Download className="h-4 w-4" />
           </Button>

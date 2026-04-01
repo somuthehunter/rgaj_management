@@ -27,7 +27,7 @@ export const getOrderStatusClasses = (status: OrderStatus) => {
 };
 
 export const getOrderItemsCount = (order: OrderListItem) =>
-  order.items.reduce((total, item) => total + item.quantity, 0);
+  order.itemCount ?? order.items.reduce((total, item) => total + item.quantity, 0);
 
 export const buildOrderBillMarkup = (order: OrderListItem) => {
   const rows = order.items

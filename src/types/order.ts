@@ -28,11 +28,12 @@ export type OrderListItem = {
   storeName: string;
   customer: OrderCustomer;
   items: OrderLineItem[];
+  itemCount?: number;
   subtotal: number;
   tax: number;
   total: number;
   status: OrderStatus;
-  paymentMethod: "CASH" | "CARD" | "UPI" | "BANK_TRANSFER";
+  paymentMethod: "CASH" | "CARD" | "UPI" | "MIXED" | "BANK_TRANSFER";
   createdAt: string;
   notes?: string;
 };

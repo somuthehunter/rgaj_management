@@ -37,6 +37,8 @@ type UserListResponse = {
   message?: string;
 };
 
+const USER_BATCH_LIMIT = 100;
+
 const normalizeUser = (user: UserApiItem): UserListItem => ({
   id: user.id,
   email: user.email,
@@ -149,7 +151,7 @@ export const userService = {
   },
 
   search: async (params: UserSearchParams) => {
-    const query = buildUsersQuery(params, 500);
+    const query = buildUsersQuery(params, USER_BATCH_LIMIT);
     const res = (await getService(
       `${endpoints.users.getAll}?${query}`,
     )) as UserListResponse;
