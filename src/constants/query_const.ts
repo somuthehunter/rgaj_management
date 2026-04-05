@@ -9,6 +9,7 @@ const endpoints = {
   products: {
     create: `/products`,
     getAll: `/products`,
+    getById: (id: string) => `/products/${id}`,
     search: `/products/search`,
     update: (id: string) => `/products/${id}`,
     delete: (id: string) => `/products/${id}`,
@@ -38,9 +39,14 @@ const endpoints = {
 
   inventory: {
     central: `/inventory/central`,
+    centralByProduct: (productId: string) => `/inventory/central/${productId}`,
+    adjust: (productId: string) => `/inventory/central/${productId}/adjust`,
     allocate: `/inventory/allocate`,
+    transfer: `/inventory/transfer`,
     summary: `/inventory/summary`,
     byStore: (storeId: string) => `/inventory/store/${storeId}`,
+    ledger: `/inventory/ledger`,
+    ledgerSummary: `/inventory/ledger/summary`,
   },
 
   billing: {

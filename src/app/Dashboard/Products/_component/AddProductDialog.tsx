@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import {
   Select,
@@ -22,6 +23,7 @@ import {
 import { makingChargeTypes } from "@/schemas/product.schema";
 import { useProductDialogForm } from "../_hooks/useProductDialogForm";
 import { AddProductDialogProps } from "../_types/product-dialog.types";
+import { productService } from "@/services/product.service";
 
 export default function AddProductDialog({
   mode = "add",
@@ -29,9 +31,14 @@ export default function AddProductDialog({
   trigger,
 }: AddProductDialogProps) {
   const [open, setOpen] = useState(false);
+  const productDetailsQuery = useQuery({
+    queryKey: ["product-details", product?.id],
+    queryFn: () => productService.getById(product!.id),
+    enabled: open && mode === "edit" && Boolean(product?.id),
+  });
   const { form, pending, isEditMode, onSubmit } = useProductDialogForm({
     mode,
-    product,
+    product: productDetailsQuery.data?.data ?? product,
     open,
     setOpen,
   });

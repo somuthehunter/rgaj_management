@@ -14,21 +14,13 @@ import {
   formatOrderDate,
   getOrderItemsCount,
   getOrderStatusClasses,
+  openPrintMarkup,
 } from "../_utils/order.utils";
 
-const downloadOrderBill = async (order: OrderRow) => {
+const printOrderBill = async (order: OrderRow) => {
   const detailedOrder =
     order.items.length > 0 ? order : (await orderService.getById(order.id)).data;
-  const markup = buildOrderBillMarkup(detailedOrder);
-  const blob = new Blob([markup], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${order.orderNumber.toLowerCase()}-bill.html`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
+  openPrintMarkup(buildOrderBillMarkup(detailedOrder), `${order.orderNumber} Bill`);
 };
 
 export default function OrderTable({ orders }: OrderTableProps) {
@@ -83,15 +75,16 @@ export default function OrderTable({ orders }: OrderTableProps) {
             variant="ghost"
             onClick={async () => {
               try {
-                await downloadOrderBill(order);
+                await printOrderBill(order);
               } catch (error) {
                 toast.error(
                   error instanceof Error
                     ? error.message
-                    : "Failed to download bill.",
+                    : "Failed to open bill for printing.",
                 );
               }
             }}
+            title="Print bill"
           >
             <Download className="h-4 w-4" />
           </Button>

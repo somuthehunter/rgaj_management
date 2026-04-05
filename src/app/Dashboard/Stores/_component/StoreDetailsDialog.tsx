@@ -16,6 +16,7 @@ import { Eye } from "lucide-react";
 import { StoreListItem } from "@/types/store";
 import { isStoreActive } from "../_utils/store.utils";
 import { storeService } from "@/services/store.service";
+import { userService } from "@/services/user.service";
 
 type StoreDetailsDialogProps = {
   store: StoreListItem;
@@ -30,6 +31,16 @@ export default function StoreDetailsDialog({
   const detailsQuery = useQuery({
     queryKey: ["store-details", store.id],
     queryFn: () => storeService.getById(store.id),
+    enabled: open,
+  });
+  const statsQuery = useQuery({
+    queryKey: ["store-stats", store.id],
+    queryFn: () => storeService.getStats(store.id),
+    enabled: open,
+  });
+  const usersQuery = useQuery({
+    queryKey: ["store-users", store.id],
+    queryFn: () => userService.byStore(store.id),
     enabled: open,
   });
 
@@ -78,15 +89,37 @@ export default function StoreDetailsDialog({
             <span className="text-muted-foreground">Users</span>
             <span>{store.userCount}</span>
           </div>
-          {detailsQuery.isLoading ? (
+          {statsQuery.isLoading ? (
+            <p className="text-xs text-muted-foreground">Loading store statistics...</p>
+          ) : statsQuery.data?.data ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Active Users</p>
+                <p className="text-lg font-semibold">{statsQuery.data.data.stats.activeUsers}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Total Users</p>
+                <p className="text-lg font-semibold">{statsQuery.data.data.stats.totalUsers}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Products</p>
+                <p className="text-lg font-semibold">{statsQuery.data.data.stats.totalProducts}</p>
+              </div>
+              <div className="rounded-md border p-3">
+                <p className="text-xs text-muted-foreground">Invoices</p>
+                <p className="text-lg font-semibold">{statsQuery.data.data.stats.totalInvoices}</p>
+              </div>
+            </div>
+          ) : null}
+          {usersQuery.isLoading || detailsQuery.isLoading ? (
             <p className="text-xs text-muted-foreground">Loading store staff...</p>
-          ) : detailsQuery.isError ? (
+          ) : usersQuery.isError || detailsQuery.isError ? (
             <p className="text-xs text-destructive">Failed to load store details.</p>
-          ) : detailsQuery.data?.data?.users?.length ? (
+          ) : usersQuery.data?.data?.length ? (
             <div className="space-y-2">
               <p className="text-muted-foreground">Assigned Staff</p>
               <div className="space-y-1">
-                {detailsQuery.data.data.users.map((user) => (
+                {usersQuery.data.data.map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between rounded-md border px-3 py-2"

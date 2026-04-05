@@ -23,3 +23,10 @@ export type CustomerSearchParams = {
   page?: number;
   limit?: number;
 };
+
+export type CreateCustomerPayload = {
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+};

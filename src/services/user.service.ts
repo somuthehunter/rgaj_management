@@ -235,5 +235,16 @@ export const userService = {
 
   activate: (id: string) => patchService(endpoints.users.activate(id), {}),
 
-  byStore: (storeId: string) => getService(endpoints.users.byStore(storeId)),
+  byStore: async (storeId: string) => {
+    const res = (await getService(endpoints.users.byStore(storeId))) as {
+      success: boolean;
+      data?: UserApiItem[];
+      message?: string;
+    };
+
+    return {
+      ...res,
+      data: (res.data ?? []).map(normalizeUser),
+    };
+  },
 };

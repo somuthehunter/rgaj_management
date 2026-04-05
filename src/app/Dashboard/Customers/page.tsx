@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import ListControlsBar from "@/components/shared/ListControlsBar";
 import { Download } from "lucide-react";
+import AddCustomerDialog from "./_component/AddCustomerDialog";
 import CustomerPagination from "./_component/CustomerPagination";
 import CustomerTable from "./_component/CustomerTable";
 import { useCustomerFilterControls } from "./_hooks/useCustomerFilterControls";
@@ -54,6 +55,7 @@ export default function CustomersPage() {
             Track customer purchase history, review all linked orders, and export customer data.
           </p>
         </div>
+        <AddCustomerDialog />
       </div>
 
       <ListControlsBar

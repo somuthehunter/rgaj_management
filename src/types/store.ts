@@ -15,6 +15,20 @@ export type StoreListItem = {
   updatedAt?: string;
 };
 
+export type StoreStats = {
+  store: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  stats: {
+    totalUsers: number;
+    activeUsers: number;
+    totalProducts: number;
+    totalInvoices: number;
+  };
+};
+
 export type StoreSearchStatus = "active" | "deactivated" | "";
 
 export type StoreSearchParams = {

@@ -7,7 +7,7 @@ import {
 import endpoints from "@/constants/query_const";
 import { StoreFormValues } from "@/schemas/store.schema";
 import { PaginatedResponse } from "@/types";
-import { StoreListItem, StoreSearchParams } from "@/types/store";
+import { StoreListItem, StoreSearchParams, StoreStats } from "@/types/store";
 
 type JsonObject = Record<string, unknown>;
 
@@ -282,7 +282,19 @@ export const storeService = {
     return res;
   },
 
-  getStats: (id: string) => getService(endpoints.stores.stats(id)),
+  getStats: async (id: string) => {
+    const res = (await getService(endpoints.stores.stats(id))) as {
+      success: boolean;
+      data?: StoreStats;
+      message?: string;
+    };
+
+    if (!res.data) {
+      throw new Error("Store statistics not found.");
+    }
+
+    return res;
+  },
 
   getOptions: () => storeOptionsCache.filter((store) => store.isActive !== false),
 };

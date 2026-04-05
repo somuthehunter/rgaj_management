@@ -1,15 +1,18 @@
 "use client";
 
+import { ReactNode } from "react";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { CentralInventoryListItem } from "@/services/inventory.service";
 
 type CentralInventoryTableProps = {
   inventory?: CentralInventoryListItem[];
+  renderActions?: (item: CentralInventoryListItem) => ReactNode;
 };
 
 export default function CentralInventoryTable({
   inventory,
+  renderActions,
 }: CentralInventoryTableProps) {
   const columns: DataTableColumn<CentralInventoryListItem>[] = [
     {
@@ -30,12 +33,22 @@ export default function CentralInventoryTable({
     {
       id: "total-weight",
       header: "Total Weight",
-      cell: (row) => row.totalWeight,
+      cell: (row) => `${row.totalWeight.toFixed(3)} g`,
     },
     {
       id: "available-weight",
       header: "Available Weight",
-      cell: (row) => row.availableWeight,
+      cell: (row) => `${row.availableWeight.toFixed(3)} g`,
+    },
+    {
+      id: "reserved-weight",
+      header: "Reserved",
+      cell: (row) => `${row.reservedWeight.toFixed(3)} g`,
+    },
+    {
+      id: "net-gold",
+      header: "Net Gold",
+      cell: (row) => `${row.netGoldWeight.toFixed(3)} g`,
     },
     {
       id: "total-stones",
@@ -43,6 +56,14 @@ export default function CentralInventoryTable({
       cell: (row) => row.totalStones,
     },
   ];
+
+  if (renderActions) {
+    columns.push({
+      id: "actions",
+      header: "Actions",
+      cell: renderActions,
+    });
+  }
 
   return (
     <div className="w-full overflow-x-auto">

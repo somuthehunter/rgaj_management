@@ -27,6 +27,7 @@ import {
   formatOrderDate,
   getOrderItemsCount,
   getOrderStatusClasses,
+  openPrintMarkup,
 } from "../_utils/order.utils";
 import CreateRefundDialog from "@/app/Dashboard/Refunds/_component/CreateRefundDialog";
 
@@ -86,17 +87,11 @@ export default function OrderDetailsDialog({
     [],
   );
 
-  const handleDownloadBill = () => {
-    const markup = buildOrderBillMarkup(resolvedOrder);
-    const blob = new Blob([markup], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${resolvedOrder.orderNumber.toLowerCase()}-bill.html`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+  const handlePrintBill = () => {
+    openPrintMarkup(
+      buildOrderBillMarkup(resolvedOrder),
+      `${resolvedOrder.orderNumber} Bill`,
+    );
   };
 
   return (
@@ -111,7 +106,7 @@ export default function OrderDetailsDialog({
                 <div>
                   <DialogTitle>Order {resolvedOrder.orderNumber}</DialogTitle>
                   <DialogDescription>
-                    Full order summary, customer details, item breakdown, and bill download.
+                    Full order summary, customer details, item breakdown, and print-ready bill.
                   </DialogDescription>
                 </div>
 
@@ -137,9 +132,9 @@ export default function OrderDetailsDialog({
                       {cancelOrderMutation.isPending ? "Cancelling..." : "Cancel Order"}
                     </Button>
                   )}
-                  <Button variant="outline" onClick={handleDownloadBill}>
+                  <Button variant="outline" onClick={handlePrintBill}>
                     <Download className="mr-2 h-4 w-4" />
-                    Download Bill
+                    Print Bill
                   </Button>
                 </div>
               </div>

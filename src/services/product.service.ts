@@ -130,6 +130,19 @@ export const productService = {
     } satisfies PaginatedResponse<ProductListItem>;
   },
 
+  getById: async (id: string) => {
+    const res = (await getService(endpoints.products.getById(id))) as ProductSingleResponse;
+
+    if (!res.data) {
+      throw new Error("Product details not found.");
+    }
+
+    return {
+      ...res,
+      data: normalizeProduct(res.data),
+    };
+  },
+
   create: async (data: ProductFormValues) => {
     const payload = {
       ...data,

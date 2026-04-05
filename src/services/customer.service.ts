@@ -1,7 +1,11 @@
-import { getService } from "./service";
+import { getService, postService } from "./service";
 import endpoints from "@/constants/query_const";
 import { PaginatedResponse } from "@/types";
-import { CustomerListItem, CustomerSearchParams } from "@/types/customer";
+import {
+  CreateCustomerPayload,
+  CustomerListItem,
+  CustomerSearchParams,
+} from "@/types/customer";
 import { OrderListItem } from "@/types/order";
 import { orderService } from "./order.service";
 
@@ -204,6 +208,23 @@ const loadCustomersWithOrders = async (params?: CustomerSearchParams) => {
 };
 
 export const customerService = {
+  create: async (payload: CreateCustomerPayload) => {
+    const res = (await postService(endpoints.billing.customers, payload)) as {
+      success: boolean;
+      data?: CustomerApiItem;
+      message?: string;
+    };
+
+    if (!res.data) {
+      throw new Error("Customer was not returned by the server.");
+    }
+
+    return {
+      ...res,
+      data: res.data,
+    };
+  },
+
   getAll: async (params?: CustomerSearchParams) => {
     const merged = await loadCustomersWithOrders(params);
     const filtered = sortCustomers(filterCustomers(merged, params), params?.sortBy, params?.sortOrder);

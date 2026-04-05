@@ -5,7 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Download } from "lucide-react";
 import { BillingInvoice } from "@/types/billing";
-import { formatOrderCurrency, formatOrderDate } from "@/app/Dashboard/Orders/_utils/order.utils";
+import {
+  formatOrderCurrency,
+  formatOrderDate,
+  openPrintMarkup,
+} from "@/app/Dashboard/Orders/_utils/order.utils";
 import { buildInvoiceBillMarkup } from "../_utils/bill.utils";
 
 type GeneratedBillCardProps = {
@@ -13,20 +17,13 @@ type GeneratedBillCardProps = {
 };
 
 export default function GeneratedBillCard({ invoice }: GeneratedBillCardProps) {
-  const downloadBill = () => {
+  const printBill = () => {
     if (!invoice) return;
 
-    const blob = new Blob([buildInvoiceBillMarkup(invoice)], {
-      type: "text/html;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${invoice.invoiceNumber.toLowerCase()}-bill.html`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+    openPrintMarkup(
+      buildInvoiceBillMarkup(invoice),
+      `${invoice.invoiceNumber} Invoice`,
+    );
   };
 
   if (!invoice) {
@@ -35,7 +32,7 @@ export default function GeneratedBillCard({ invoice }: GeneratedBillCardProps) {
         <CardHeader>
           <CardTitle className="text-lg">Generated Bill</CardTitle>
           <CardDescription>
-            Once you generate an invoice, the bill preview and download action will appear here.
+            Once you generate an invoice, the print-ready bill action will appear here.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -92,9 +89,9 @@ export default function GeneratedBillCard({ invoice }: GeneratedBillCardProps) {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={downloadBill}>
+          <Button onClick={printBill}>
             <Download className="mr-2 h-4 w-4" />
-            Download Bill
+            Print Bill
           </Button>
         </div>
       </CardContent>
