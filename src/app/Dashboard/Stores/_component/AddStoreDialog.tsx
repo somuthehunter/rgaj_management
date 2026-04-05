@@ -52,38 +52,44 @@ export default function AddStoreDialog({
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Store Code</Label>
-              <Input {...form.register("code")} />
+              <Input {...form.register("code")} placeholder="Auto-generated if left blank" maxLength={20} />
               <p className="text-sm text-destructive">{form.formState.errors.code?.message}</p>
             </div>
             <div className="space-y-2">
-              <Label>Store Name</Label>
-              <Input {...form.register("name")} />
+              <Label>Store Name *</Label>
+              <Input {...form.register("name")} placeholder="Enter store name" maxLength={80} />
               <p className="text-sm text-destructive">{form.formState.errors.name?.message}</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Address</Label>
-            <Input {...form.register("address")} />
+            <Label>Address *</Label>
+            <Input {...form.register("address")} placeholder="Enter store address" maxLength={200} />
             <p className="text-sm text-destructive">{form.formState.errors.address?.message}</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>City</Label>
-              <Input {...form.register("city")} />
+              <Label>City *</Label>
+              <Input {...form.register("city")} placeholder="Enter city" maxLength={50} />
               <p className="text-sm text-destructive">{form.formState.errors.city?.message}</p>
             </div>
             <div className="space-y-2">
-              <Label>State</Label>
-              <Input {...form.register("state")} />
+              <Label>State *</Label>
+              <Input {...form.register("state")} placeholder="Enter state" maxLength={50} />
               <p className="text-sm text-destructive">{form.formState.errors.state?.message}</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Phone</Label>
-            <Input {...form.register("phone")} />
+            <Label>Phone *</Label>
+            <Input
+              {...form.register("phone")}
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10-digit phone number"
+            />
             <p className="text-sm text-destructive">{form.formState.errors.phone?.message}</p>
           </div>
 

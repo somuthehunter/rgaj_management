@@ -29,6 +29,7 @@ export default function AddCustomerDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createCustomer = useMutation({
     mutationFn: () =>
@@ -42,6 +43,7 @@ export default function AddCustomerDialog() {
       toast.success("Customer saved successfully.");
       await queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CUSTOMERS] });
       setForm(initialForm);
+      setErrors({});
       setOpen(false);
     },
     onError: (error) => {
@@ -56,6 +58,7 @@ export default function AddCustomerDialog() {
         setOpen(nextOpen);
         if (!nextOpen) {
           setForm(initialForm);
+          setErrors({});
         }
       }}
     >
@@ -75,25 +78,54 @@ export default function AddCustomerDialog() {
           className="space-y-4 pt-2"
           onSubmit={(event) => {
             event.preventDefault();
+            const nextErrors: Record<string, string> = {};
+
+            if (!form.name.trim()) {
+              nextErrors.name = "Customer name is required.";
+            }
+
+            if (!/^\d{10}$/.test(form.phone.trim())) {
+              nextErrors.phone = "Phone number must be exactly 10 digits.";
+            }
+
+            if (
+              form.email.trim() &&
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())
+            ) {
+              nextErrors.email = "Enter a valid email address.";
+            }
+
+            setErrors(nextErrors);
+
+            if (Object.keys(nextErrors).length > 0) {
+              return;
+            }
+
             createCustomer.mutate();
           }}
         >
           <div className="space-y-2">
-            <Label>Name</Label>
+            <Label>Name *</Label>
             <Input
               value={form.name}
               onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Customer name"
+              placeholder="Enter customer name"
+              maxLength={80}
             />
+            <p className="text-sm text-destructive">{errors.name}</p>
           </div>
 
           <div className="space-y-2">
-            <Label>Phone</Label>
+            <Label>Phone *</Label>
             <Input
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
               value={form.phone}
               onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-              placeholder="Phone number"
+              placeholder="10-digit phone number"
             />
+            <p className="text-sm text-destructive">{errors.phone}</p>
           </div>
 
           <div className="space-y-2">
@@ -102,8 +134,9 @@ export default function AddCustomerDialog() {
               type="email"
               value={form.email}
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-              placeholder="Optional email"
+              placeholder="name@example.com"
             />
+            <p className="text-sm text-destructive">{errors.email}</p>
           </div>
 
           <div className="space-y-2">
@@ -112,7 +145,7 @@ export default function AddCustomerDialog() {
               rows={3}
               value={form.address}
               onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))}
-              placeholder="Optional address"
+              placeholder="Enter address if available"
             />
           </div>
 

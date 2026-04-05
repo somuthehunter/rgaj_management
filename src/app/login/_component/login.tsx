@@ -1,36 +1,37 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "../_hooks/useLogin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Login() {
   const { formData, handleChange, handleSubmit, isPending } = useLogin();
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen grid grid-cols-1 md:grid-cols-2">
-      {/* LEFT IMAGE SECTION */}
-      <div className="hidden md:flex justify-center items-center bg-brand-gradient">
+    <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
+      <div className="hidden items-center justify-center bg-brand-gradient md:flex">
         <Image
           src="/images/hero.png"
           alt="ratnasmriti-login"
           width={500}
           height={500}
           priority
-          className="object-cover mb-20"
+          className="mb-20 object-cover"
         />
 
         <div className="absolute bottom-8 left-8 max-w-md text-white">
           <p className="text-lg font-medium">
             Ratnasmriti Gems And Jewellers - We Provide the best.
           </p>
-          <p className="mt-2 text-sm opacity-80">— Ratnasmriti Jewellers</p>
+          <p className="mt-2 text-sm opacity-80">Ratnasmriti Jewellers</p>
         </div>
       </div>
 
-      {/* RIGHT LOGIN FORM */}
-      <div className="flex items-center justify-center bg-black text-white px-6">
+      <div className="flex items-center justify-center bg-black px-6 text-white">
         <div className="w-full max-w-md space-y-6">
           <div>
             <h1 className="text-3xl font-semibold">
@@ -43,25 +44,45 @@ export default function Login() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm mb-1">Email or Phone</label>
+              <label className="mb-1 block text-sm">Email *</label>
               <Input
                 name="email"
                 type="email"
-                placeholder="admin@gmail.com"
+                placeholder="name@example.com"
                 value={formData.email}
                 onChange={handleChange}
+                autoComplete="email"
+                inputMode="email"
+                required
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Password</label>
-              <Input
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <label className="mb-1 block text-sm">Password *</label>
+              <div className="relative">
+                <Input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  autoComplete="current-password"
+                  required
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-white"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="text-right">
@@ -70,7 +91,7 @@ export default function Login() {
               </a>
             </div>
 
-            <Button type="submit" disabled={isPending} className="w-full ">
+            <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? "Signing in..." : "Sign In"}
             </Button>
           </form>

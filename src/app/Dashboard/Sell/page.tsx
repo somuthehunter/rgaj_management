@@ -83,7 +83,7 @@ export default function SellPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {isSuperAdmin && (
                   <div className="space-y-2">
-                    <Label>Store</Label>
+                    <Label>Store *</Label>
                     <Controller
                       control={form.control}
                       name="storeId"
@@ -110,25 +110,38 @@ export default function SellPage() {
 
                 <div className="space-y-2">
                   <Label>Customer Name</Label>
-                  <Input {...form.register("customerName")} placeholder="Walk-in customer" />
+                  <Input {...form.register("customerName")} placeholder="Enter customer name" maxLength={80} />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Phone Number</Label>
-                  <Input {...form.register("customerPhone")} placeholder="Optional" />
+                  <Input
+                    {...form.register("customerPhone")}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="10-digit phone number"
+                  />
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.customerPhone?.message}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Email</Label>
-                  <Input type="email" {...form.register("customerEmail")} placeholder="Optional" />
+                  <Input type="email" {...form.register("customerEmail")} placeholder="name@example.com" />
+                  <p className="text-sm text-destructive">
+                    {form.formState.errors.customerEmail?.message}
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Gold Rate / Gram</Label>
+                  <Label>Gold Rate / Gram *</Label>
                   <Input
                     type="number"
                     min="0"
                     step="0.01"
+                    placeholder="Enter today's gold rate"
                     {...form.register("goldRatePerGram", { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">
@@ -137,7 +150,7 @@ export default function SellPage() {
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Payment Method</Label>
+                  <Label>Payment Method *</Label>
                   <Controller
                     control={form.control}
                     name="paymentMethod"
@@ -164,7 +177,7 @@ export default function SellPage() {
 
               <div className="space-y-2">
                 <Label>Customer Address</Label>
-                <Textarea rows={3} {...form.register("customerAddress")} placeholder="Optional" />
+                <Textarea rows={3} {...form.register("customerAddress")} placeholder="Enter address if available" />
               </div>
 
               {showSelectStoreHint ? (

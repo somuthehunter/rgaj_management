@@ -83,7 +83,7 @@ export default function BillItemsEditor({
             <div key={field.id} className="rounded-lg border p-4">
               <div className="grid gap-4 xl:grid-cols-[2fr_120px_120px_120px_1fr_auto]">
                 <div className="space-y-2">
-                  <Label>Product</Label>
+                  <Label>Product *</Label>
                   <Controller
                     control={control}
                     name={`items.${index}.productId`}
@@ -117,11 +117,12 @@ export default function BillItemsEditor({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Weight (g)</Label>
+                  <Label>Weight (g) *</Label>
                   <Input
                     type="number"
                     min="0.001"
                     step="0.001"
+                    placeholder="Gross item weight"
                     {...register(`items.${index}.actualWeight`, { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">
@@ -135,6 +136,7 @@ export default function BillItemsEditor({
                     type="number"
                     min="0"
                     step="0.001"
+                    placeholder="Stone weight"
                     {...register(`items.${index}.stoneWeight`, { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">
@@ -148,6 +150,7 @@ export default function BillItemsEditor({
                     type="number"
                     min="0"
                     step="1"
+                    placeholder="Stone count"
                     {...register(`items.${index}.stoneCount`, { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">

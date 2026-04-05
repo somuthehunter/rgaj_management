@@ -3,6 +3,18 @@ import { z } from "zod";
 export const paymentMethods = ["CASH", "CARD", "UPI", "MIXED"] as const;
 
 const optionalTextField = z.string().trim().optional().or(z.literal(""));
+const optionalPhoneField = z
+  .string()
+  .trim()
+  .regex(/^\d{10}$/, "Phone number must be exactly 10 digits")
+  .optional()
+  .or(z.literal(""));
+const optionalEmailField = z
+  .string()
+  .trim()
+  .email("Enter a valid email address")
+  .optional()
+  .or(z.literal(""));
 
 export const billItemSchema = z.object({
   productId: z.string().min(1, "Product is required"),
@@ -18,13 +30,19 @@ export const billItemSchema = z.object({
     .int("Stone count must be a whole number")
     .min(0, "Stone count cannot be negative")
     .optional(),
-});
+}).refine(
+  (value) => (value.stoneWeight ?? 0) <= value.actualWeight,
+  {
+    message: "Stone weight cannot be greater than item weight",
+    path: ["stoneWeight"],
+  },
+);
 
 export const billSchema = z.object({
   storeId: z.string().optional(),
   customerName: optionalTextField,
-  customerPhone: optionalTextField,
-  customerEmail: optionalTextField,
+  customerPhone: optionalPhoneField,
+  customerEmail: optionalEmailField,
   customerAddress: optionalTextField,
   goldRatePerGram: z
     .number({ error: "Gold rate is required" })
