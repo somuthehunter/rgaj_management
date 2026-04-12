@@ -1,19 +1,20 @@
 import { z } from "zod";
 
-export const makingChargeTypes = ["PER_GRAM", "FIXED", "PERCENTAGE"] as const;
+export const weightUnits = ["RATI", "CARAT"] as const;
 
 export const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().trim().min(1, "Name is required"),
   sku: z.string().trim().optional(),
-  category: z.string().min(1, "Category is required"),
-  purity: z.string().min(1, "Purity is required"),
-  hsnCode: z.string().min(1, "HSN code is required"),
-  makingChargeType: z.enum(makingChargeTypes, {
-    error: "Making charge type must be one of: PER_GRAM, FIXED, PERCENTAGE",
+  categoryId: z.string().min(1, "Category is required"),
+  weightUnit: z.enum(weightUnits, {
+    error: "Weight unit must be RATI or CARAT",
   }),
-  makingCharge: z.number().positive("Making charge must be a positive number"),
+  pricePerUnit: z
+    .number({ error: "Price per unit is required" })
+    .positive("Price per unit must be greater than 0"),
+  hsnCode: z.string().trim().min(1, "HSN code is required"),
   gstRate: z
-    .number()
+    .number({ error: "GST rate is required" })
     .min(0, "GST rate must be between 0 and 100")
     .max(100, "GST rate must be between 0 and 100"),
 });

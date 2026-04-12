@@ -38,16 +38,10 @@ export default function SellPage() {
   } = useBillBuilder();
 
   const watchedItems = form.watch("items");
-  const goldRatePerGram = form.watch("goldRatePerGram");
   const summary = watchedItems.reduce(
     (accumulator, item) => {
       const product = products.find((entry) => entry.id === item.productId);
-      const totals = getSellLineTotals(
-        product,
-        item.actualWeight,
-        goldRatePerGram,
-        item.stoneWeight || 0,
-      );
+      const totals = getSellLineTotals(product, item.weight);
 
       return {
         subtotal: accumulator.subtotal + totals.subtotal,
@@ -59,7 +53,8 @@ export default function SellPage() {
   );
 
   const showSelectStoreHint = isSuperAdmin && !selectedStoreId;
-  const showEmptyProducts = !productsLoading && selectedStoreId && products.length === 0;
+  const showEmptyProducts =
+    !productsLoading && Boolean(selectedStoreId) && products.length === 0;
 
   return (
     <div className="space-y-6">
@@ -135,20 +130,6 @@ export default function SellPage() {
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Gold Rate / Gram *</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="Enter today's gold rate"
-                    {...form.register("goldRatePerGram", { valueAsNumber: true })}
-                  />
-                  <p className="text-sm text-destructive">
-                    {form.formState.errors.goldRatePerGram?.message}
-                  </p>
-                </div>
-
                 <div className="space-y-2 md:col-span-2">
                   <Label>Payment Method *</Label>
                   <Controller
@@ -203,7 +184,6 @@ export default function SellPage() {
                   watch={form.watch}
                   errors={form.formState.errors}
                   products={products}
-                  goldRatePerGram={goldRatePerGram}
                   itemsFieldArray={itemsFieldArray}
                 />
               )}

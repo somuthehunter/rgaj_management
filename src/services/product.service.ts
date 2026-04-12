@@ -10,7 +10,28 @@ import { PaginatedResponse } from "@/types";
 import { ProductFormValues } from "@/schemas/product.schema";
 import { ProductListItem } from "@/types/product";
 
-type ProductApiItem = ProductListItem;
+type ProductApiItem = {
+  id: string;
+  sku?: string;
+  name?: string;
+  categoryId?: string;
+  category?: {
+    id: string;
+    name?: string;
+    description?: string;
+    isActive?: boolean;
+  } | null;
+  weightUnit: "RATI" | "CARAT";
+  pricePerUnit?: number;
+  hsnCode?: string;
+  gstRate?: number;
+  isActive?: boolean;
+  active?: boolean;
+  status?: string;
+  deactivatedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 type ProductListResponse = {
   success: boolean;
@@ -34,12 +55,20 @@ const normalizeProduct = (product: ProductApiItem): ProductListItem => ({
   id: product.id,
   sku: product.sku ?? "N/A",
   name: product.name ?? "Unnamed Product",
-  category: product.category ?? "",
-  purity: product.purity ?? "",
+  categoryId: product.category?.id ?? product.categoryId ?? "",
+  categoryName: product.category?.name ?? "Uncategorized",
+  category: product.category
+    ? {
+        id: product.category.id,
+        name: product.category.name ?? "Uncategorized",
+        description: product.category.description,
+        isActive: product.category.isActive,
+      }
+    : null,
+  weightUnit: product.weightUnit,
+  pricePerUnit: Number(product.pricePerUnit ?? 0),
   hsnCode: product.hsnCode ?? "",
-  makingChargeType: product.makingChargeType,
-  makingCharge: product.makingCharge,
-  gstRate: product.gstRate,
+  gstRate: Number(product.gstRate ?? 0),
   isActive:
     typeof product.isActive === "boolean"
       ? product.isActive
@@ -61,12 +90,12 @@ const buildProductsQuery = (params?: ProductSearchParams) => {
     query.set("limit", String(params.limit));
   }
 
-  if (params?.category) {
-    query.set("category", params.category);
+  if (params?.categoryId) {
+    query.set("categoryId", params.categoryId);
   }
 
-  if (params?.purity) {
-    query.set("purity", params.purity);
+  if (params?.weightUnit) {
+    query.set("weightUnit", params.weightUnit);
   }
 
   if (typeof params?.isActive === "boolean") {
@@ -79,10 +108,6 @@ const buildProductsQuery = (params?: ProductSearchParams) => {
 
   if (params?.sortOrder) {
     query.set("sortOrder", params.sortOrder);
-  }
-
-  if (params?.sortBy && params?.sortOrder) {
-    query.set("sort", `${params.sortBy}:${params.sortOrder}`);
   }
 
   return query.toString();
@@ -109,16 +134,29 @@ export const productService = {
   },
 
   search: async (params: ProductSearchParams) => {
-    const query = buildProductsQuery(params);
-    const searchQuery = new URLSearchParams(query);
+    const searchQuery = new URLSearchParams();
 
     if (params.search) {
       searchQuery.set("q", params.search);
     }
 
     const endPoint = `${endpoints.products.search}?${searchQuery.toString()}`;
-    const res = (await getService(endPoint)) as ProductListResponse | { success: boolean; data?: ProductApiItem[]; message?: string };
-    const rows = (res.data ?? []).map(normalizeProduct);
+    const res = (await getService(endPoint)) as
+      | ProductListResponse
+      | { success: boolean; data?: ProductApiItem[]; message?: string };
+    let rows = (res.data ?? []).map(normalizeProduct);
+
+    if (params.categoryId) {
+      rows = rows.filter((product) => product.categoryId === params.categoryId);
+    }
+
+    if (params.weightUnit) {
+      rows = rows.filter((product) => product.weightUnit === params.weightUnit);
+    }
+
+    if (typeof params.isActive === "boolean") {
+      rows = rows.filter((product) => (product.isActive ?? true) === params.isActive);
+    }
 
     return {
       success: res.success,

@@ -11,8 +11,8 @@ export const useProducts = (params?: ProductSearchParams) => {
   const user = getUser();
 
   const search = params?.search?.trim() ?? "";
-  const category = params?.category ?? "";
-  const purity = params?.purity ?? "";
+  const categoryId = params?.categoryId ?? "";
+  const weightUnit = params?.weightUnit ?? "";
   const isActive = params?.isActive;
   const sortBy = params?.sortBy ?? "";
   const sortOrder = params?.sortOrder ?? "";
@@ -24,8 +24,8 @@ export const useProducts = (params?: ProductSearchParams) => {
       QUERY_KEYS.PRODUCTS,
       user?.storeId,
       search,
-      category,
-      purity,
+      categoryId,
+      weightUnit,
       isActive,
       sortBy,
       sortOrder,
@@ -35,8 +35,8 @@ export const useProducts = (params?: ProductSearchParams) => {
     queryFn: async () => {
       const requestParams = {
         search,
-        category,
-        purity,
+        categoryId,
+        weightUnit,
         isActive,
         sortBy,
         sortOrder,

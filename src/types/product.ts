@@ -11,16 +11,26 @@ export type ApiErrorPayload = {
   details?: ApiErrorDetail[];
 };
 
+export type ProductCategory = {
+  id: string;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+};
+
+export type WeightUnit = "RATI" | "CARAT";
+
 export type ProductListItem = {
   id: string;
-  name?: string;
+  name: string;
   sku?: string;
-  category?: string;
-  purity?: string;
-  hsnCode?: string;
-  makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
-  makingCharge?: number;
-  gstRate?: number;
+  categoryId: string;
+  categoryName: string;
+  category?: ProductCategory | null;
+  weightUnit: WeightUnit;
+  pricePerUnit: number;
+  hsnCode: string;
+  gstRate: number;
   isActive?: boolean;
   active?: boolean;
   status?: string;
@@ -35,8 +45,8 @@ export type ProductSearchStatus = "active" | "deactivated" | "";
 
 export type ProductSearchParams = {
   search?: string;
-  category?: string;
-  purity?: string;
+  categoryId?: string;
+  weightUnit?: WeightUnit | "";
   status?: ProductSearchStatus;
   isActive?: boolean;
   sortBy?: string;

@@ -321,12 +321,13 @@ export const inventoryService = {
         id: item.product?.id ?? item.productId,
         sku: item.product?.sku ?? "N/A",
         name: item.product?.name ?? "Unnamed Product",
-        category: item.product?.category ?? "",
-        purity: item.product?.purity ?? "",
+        categoryId: "",
+        categoryName: item.product?.category ?? "",
+        category: null,
+        weightUnit: "CARAT" as const,
+        pricePerUnit: 0,
         hsnCode: item.product?.hsnCode ?? "",
-        makingChargeType: item.product?.makingChargeType,
-        makingCharge: item.product?.makingCharge,
-        gstRate: item.product?.gstRate,
+        gstRate: item.product?.gstRate ?? 0,
         isActive:
           typeof item.product?.isActive === "boolean"
             ? item.product.isActive

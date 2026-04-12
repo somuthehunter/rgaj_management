@@ -18,13 +18,11 @@ const defaultValues: BillFormValues = {
   customerPhone: "",
   customerEmail: "",
   customerAddress: "",
-  goldRatePerGram: 0,
   paymentMethod: "CASH",
   items: [
     {
       productId: "",
-      actualWeight: 0,
-      stoneWeight: 0,
+      weight: 0,
       stoneCount: 0,
     },
   ],
@@ -78,12 +76,10 @@ export const useBillBuilder = () => {
 
       return billingService.generateBill({
         storeId: resolvedStoreId,
-        goldRatePerGram: values.goldRatePerGram,
         paymentMethod: values.paymentMethod,
         items: values.items.map((item) => ({
           productId: item.productId,
-          actualWeight: item.actualWeight,
-          stoneWeight: item.stoneWeight || undefined,
+          weight: item.weight,
           stoneCount: item.stoneCount || undefined,
         })),
         customer: {

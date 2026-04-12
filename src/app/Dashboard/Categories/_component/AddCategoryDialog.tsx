@@ -51,24 +51,16 @@ export default function AddCategoryDialog({
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label>Name</Label>
-            <Input {...form.register("name")} />
+            <Label>Name *</Label>
+            <Input placeholder="Enter category name" {...form.register("name")} />
             <p className="text-sm text-destructive">
               {form.formState.errors.name?.message}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Slug</Label>
-            <Input {...form.register("slug")} />
-            <p className="text-sm text-destructive">
-              {form.formState.errors.slug?.message}
-            </p>
-          </div>
-
-          <div className="space-y-2">
             <Label>Description</Label>
-            <Textarea rows={4} {...form.register("description")} />
+            <Textarea rows={4} placeholder="Enter description if needed" {...form.register("description")} />
             <p className="text-sm text-destructive">
               {form.formState.errors.description?.message}
             </p>

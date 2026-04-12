@@ -402,8 +402,8 @@ export const statsService = {
     return {
       success: true,
       data: salesRes.data.byStore.map((item) => ({
-        name: item.storeName,
-        value: item.totalSales - (refundsByStore.get(item.storeId) ?? 0),
+        name: item.storeName ?? "Store",
+        value: item.totalSales - (refundsByStore.get(item.storeId ?? "") ?? 0),
       })),
     };
   },

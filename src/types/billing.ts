@@ -1,28 +1,27 @@
+import { WeightUnit } from "./product";
+
 export type BillingPaymentMethod = "CASH" | "CARD" | "UPI" | "MIXED";
 
 export type SellableProduct = {
   id: string;
   name: string;
   sku: string;
-  category: string;
-  purity: string;
+  categoryId?: string;
+  categoryName?: string;
   hsnCode: string;
-  makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
-  makingCharge?: number;
+  weightUnit: WeightUnit;
+  pricePerUnit: number;
   gstRate: number;
   availableWeight: number;
   availableStones: number;
-  stoneWeight: number;
 };
 
 export type CreateBillPayload = {
   storeId: string;
-  goldRatePerGram: number;
   paymentMethod: BillingPaymentMethod;
   items: Array<{
     productId: string;
-    actualWeight: number;
-    stoneWeight?: number;
+    weight: number;
     stoneCount?: number;
   }>;
   customer: {
@@ -55,16 +54,10 @@ export type BillingInvoiceItem = {
   productId: string;
   productName: string;
   sku: string;
-  purity: string;
   hsnCode: string;
-  allocatedWeight?: number | null;
-  actualWeight: number;
+  weight: number;
   stoneCount: number;
-  stoneWeight: number;
-  netGoldWeight: number;
-  ratePerGram: number;
-  goldPrice: number;
-  makingCharge: number;
+  pricePerUnit: number;
   gstRate: number;
   gstAmount: number;
   totalAmount: number;

@@ -24,7 +24,6 @@ type BillItemsEditorProps = {
   watch: UseFormWatch<BillFormValues>;
   errors: FieldErrors<BillFormValues>;
   products: SellableProduct[];
-  goldRatePerGram: number;
   itemsFieldArray: UseFieldArrayReturn<BillFormValues, "items", "id">;
 };
 
@@ -34,7 +33,6 @@ export default function BillItemsEditor({
   watch,
   errors,
   products,
-  goldRatePerGram,
   itemsFieldArray,
 }: BillItemsEditorProps) {
   const watchedItems = watch("items");
@@ -54,8 +52,7 @@ export default function BillItemsEditor({
           onClick={() =>
             itemsFieldArray.append({
               productId: "",
-              actualWeight: 0,
-              stoneWeight: 0,
+              weight: 0,
               stoneCount: 0,
             })
           }
@@ -70,14 +67,8 @@ export default function BillItemsEditor({
           const selectedProduct = products.find(
             (product) => product.id === watchedItems?.[index]?.productId,
           );
-          const actualWeight = watchedItems?.[index]?.actualWeight ?? 0;
-          const stoneWeight = watchedItems?.[index]?.stoneWeight ?? 0;
-          const totals = getSellLineTotals(
-            selectedProduct,
-            actualWeight,
-            goldRatePerGram,
-            stoneWeight,
-          );
+          const weight = watchedItems?.[index]?.weight ?? 0;
+          const totals = getSellLineTotals(selectedProduct, weight);
 
           return (
             <div key={field.id} className="rounded-lg border p-4">
@@ -95,10 +86,10 @@ export default function BillItemsEditor({
                         <SelectTrigger>
                           <SelectValue placeholder="Select a product" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} ({product.sku})
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -110,37 +101,23 @@ export default function BillItemsEditor({
                   </p>
                   {selectedProduct && (
                     <p className="text-xs text-muted-foreground">
-                      {selectedProduct.category} | Available:{" "}
-                      {selectedProduct.availableWeight.toFixed(3)} g
+                      {selectedProduct.weightUnit} | Available:{" "}
+                      {selectedProduct.availableWeight.toFixed(3)}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Weight (g) *</Label>
+                  <Label>Weight *</Label>
                   <Input
                     type="number"
                     min="0.001"
                     step="0.001"
-                    placeholder="Gross item weight"
-                    {...register(`items.${index}.actualWeight`, { valueAsNumber: true })}
+                    placeholder="Enter sold weight"
+                    {...register(`items.${index}.weight`, { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">
-                    {errors.items?.[index]?.actualWeight?.message}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Stone Wt.</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.001"
-                    placeholder="Stone weight"
-                    {...register(`items.${index}.stoneWeight`, { valueAsNumber: true })}
-                  />
-                  <p className="text-sm text-destructive">
-                    {errors.items?.[index]?.stoneWeight?.message}
+                    {errors.items?.[index]?.weight?.message}
                   </p>
                 </div>
 
@@ -162,7 +139,7 @@ export default function BillItemsEditor({
                   <p className="text-xs text-muted-foreground">Estimated Total</p>
                   <p className="text-sm font-medium">{formatOrderCurrency(totals.total)}</p>
                   <p className="text-xs text-muted-foreground">
-                    Net gold {totals.netGoldWeight.toFixed(3)} g
+                    Rate/unit {formatOrderCurrency(selectedProduct?.pricePerUnit ?? 0)}
                   </p>
                 </div>
 

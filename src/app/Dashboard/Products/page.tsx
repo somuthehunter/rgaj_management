@@ -30,12 +30,12 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 };
 
 export default function ProductsPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     const user = getUser();
     const normalizedRole = normalizeRole(user?.role);
-    setIsAdmin(normalizedRole === UserRole.SUPER_ADMIN);
+    setRole(normalizedRole ?? null);
   }, []);
 
   const filters = useProductFiltersState();
@@ -43,9 +43,11 @@ export default function ProductsPage() {
   const { selectControls } = useProductFilterControls({
     products: data?.data,
     categoryFilter: filters.categoryFilter,
+    weightUnitFilter: filters.weightUnitFilter,
     statusFilter: filters.statusFilter,
     sortValue: filters.sortValue,
     setCategoryFilter: filters.setCategoryFilter,
+    setWeightUnitFilter: filters.setWeightUnitFilter,
     setStatusFilter: filters.setStatusFilter,
     setSortValue: filters.setSortValue,
   });
@@ -60,12 +62,15 @@ export default function ProductsPage() {
   const to = Math.min(currentPage * itemsPerPage, totalItems);
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
+  const canEdit = role === UserRole.SUPER_ADMIN || role === UserRole.STORE_ADMIN;
+  const canManageStatus = role === UserRole.SUPER_ADMIN;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between">
         <h1 className="text-2xl font-bold">Products</h1>
         <div className="flex items-center gap-2">
-          <AddProductDialog />
+          {canEdit ? <AddProductDialog /> : null}
         </div>
       </div>
 
@@ -87,7 +92,8 @@ export default function ProductsPage() {
         <div className="space-y-4">
           <ProductTable
             products={data?.data}
-            isAdmin={isAdmin}
+            canManageStatus={canManageStatus}
+            canEdit={canEdit}
             onDeactivate={handleDeactivate}
             onActivate={handleActivate}
           />

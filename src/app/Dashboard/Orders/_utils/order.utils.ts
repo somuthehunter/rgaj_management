@@ -19,6 +19,13 @@ export const getOrderStatusClasses = (status: OrderStatus) => {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
+  if (
+    status === OrderStatus.PARTIALLY_RETURNED ||
+    status === OrderStatus.FULLY_RETURNED
+  ) {
+    return "border-blue-200 bg-blue-50 text-blue-700";
+  }
+
   if (status === OrderStatus.CANCELLED) {
     return "border-red-200 bg-red-50 text-red-700";
   }
@@ -245,8 +252,8 @@ export const buildOrderBillMarkup = (order: OrderListItem) => {
             <div style="color:#6b7280;font-size:11px;">SKU: ${item.sku}</div>
             <div style="color:#6b7280;font-size:11px;">Category: ${item.category}</div>
           </td>
-          <td class="num">${(item.actualWeight ?? 0).toFixed(3)} g</td>
-          <td class="num">${(item.stoneWeight ?? 0).toFixed(3)} g</td>
+          <td class="num">${(item.actualWeight ?? 0).toFixed(3)}</td>
+          <td class="num">${item.stoneCount ?? 0}</td>
           <td class="num">${item.quantity}</td>
           <td class="num">${formatOrderCurrency(item.unitPrice)}</td>
           <td class="num">${item.taxRate}%</td>
@@ -297,8 +304,8 @@ export const buildOrderBillMarkup = (order: OrderListItem) => {
           <tr>
             <th>#</th>
             <th>Item</th>
-            <th class="num">Gross Wt</th>
-            <th class="num">Stone Wt</th>
+            <th class="num">Weight</th>
+            <th class="num">Stone Cnt</th>
             <th class="num">Qty</th>
             <th class="num">Rate</th>
             <th class="num">GST</th>

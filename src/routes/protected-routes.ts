@@ -32,12 +32,12 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Customers",
     label: "Customers",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
   },
   {
     path: "/Dashboard/Categories",
     label: "Categories",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Inventory",
@@ -47,7 +47,7 @@ export const protectedRoutes: RouteConfig[] = [
   {
     path: "/Dashboard/Products",
     label: "Products",
-    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN],
+    roles: [UserRole.SUPER_ADMIN, UserRole.STORE_ADMIN, UserRole.CASHIER],
   },
   {
     path: "/Dashboard/Sell",

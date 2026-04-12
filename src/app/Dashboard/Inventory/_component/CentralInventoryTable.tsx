@@ -3,7 +3,7 @@
 import { ReactNode } from "react";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
 import { Badge } from "@/components/ui/badge";
-import { CentralInventoryListItem } from "@/services/inventory.service";
+import { CentralInventoryListItem } from "@/types/inventory";
 
 type CentralInventoryTableProps = {
   inventory?: CentralInventoryListItem[];

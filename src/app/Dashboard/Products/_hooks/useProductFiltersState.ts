@@ -15,6 +15,7 @@ export const useProductFiltersState = () => {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [weightUnitFilter, setWeightUnitFilter] = useState<"" | "RATI" | "CARAT">("");
   const [statusFilter, setStatusFilter] = useState<ProductStatusValue>("all");
   const [sortValue, setSortValue] = useState<ProductSortValue>("newest");
 
@@ -31,7 +32,8 @@ export const useProductFiltersState = () => {
 
     return {
       search: debouncedSearch,
-      category: categoryFilter === "all" ? "" : categoryFilter,
+      categoryId: categoryFilter === "all" ? "" : categoryFilter,
+      weightUnit: weightUnitFilter || "",
       status: statusFilter === "all" ? "" : statusFilter,
       isActive:
         statusFilter === "all"
@@ -42,17 +44,18 @@ export const useProductFiltersState = () => {
       page,
       limit: 10,
     };
-  }, [debouncedSearch, categoryFilter, statusFilter, sortValue, page]);
+  }, [debouncedSearch, categoryFilter, weightUnitFilter, statusFilter, sortValue, page]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, categoryFilter, statusFilter, sortValue]);
+  }, [debouncedSearch, categoryFilter, weightUnitFilter, statusFilter, sortValue]);
 
   const resetFilters = () => {
     setPage(1);
     setSearchInput("");
     setDebouncedSearch("");
     setCategoryFilter("all");
+    setWeightUnitFilter("");
     setStatusFilter("all");
     setSortValue("newest");
   };
@@ -61,12 +64,14 @@ export const useProductFiltersState = () => {
     searchInput,
     page,
     categoryFilter,
+    weightUnitFilter,
     statusFilter,
     sortValue,
     queryParams,
     setPage,
     setSearchInput,
     setCategoryFilter,
+    setWeightUnitFilter,
     setStatusFilter,
     setSortValue,
     resetFilters,

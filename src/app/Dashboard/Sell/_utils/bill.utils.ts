@@ -1,53 +1,25 @@
 import { BillingInvoice, SellableProduct } from "@/types/billing";
 import { formatOrderCurrency, formatOrderDate } from "@/app/Dashboard/Orders/_utils/order.utils";
 
-const getNetGoldWeight = (actualWeight: number, stoneWeight = 0) =>
-  Math.max(actualWeight - stoneWeight, 0);
-
-const getMakingChargeValue = (
-  product: SellableProduct,
-  goldPrice: number,
-  netGoldWeight: number,
-) => {
-  const makingCharge = product.makingCharge ?? 0;
-
-  if (product.makingChargeType === "FIXED") {
-    return makingCharge;
-  }
-
-  if (product.makingChargeType === "PERCENTAGE") {
-    return (goldPrice * makingCharge) / 100;
-  }
-
-  return makingCharge * netGoldWeight;
-};
-
 export const getSellLineTotals = (
   product: SellableProduct | undefined,
-  actualWeight: number,
-  goldRatePerGram: number,
-  stoneWeight = 0,
+  weight: number,
 ) => {
-  if (!product || !actualWeight || !goldRatePerGram) {
+  if (!product || !weight) {
     return {
       subtotal: 0,
       tax: 0,
       total: 0,
-      netGoldWeight: 0,
     };
   }
 
-  const netGoldWeight = getNetGoldWeight(actualWeight, stoneWeight);
-  const goldPrice = netGoldWeight * goldRatePerGram;
-  const makingCharge = getMakingChargeValue(product, goldPrice, netGoldWeight);
-  const subtotal = goldPrice + makingCharge;
+  const subtotal = weight * product.pricePerUnit;
   const tax = (subtotal * (product.gstRate ?? 0)) / 100;
 
   return {
     subtotal,
     tax,
     total: subtotal + tax,
-    netGoldWeight,
   };
 };
 
@@ -232,11 +204,10 @@ export const buildInvoiceBillMarkup = (invoice: BillingInvoice) => {
             <div style="color:#6b7280;font-size:11px;">SKU: ${item.sku}</div>
             <div style="color:#6b7280;font-size:11px;">RFID: ${item.rfid}</div>
           </td>
-          <td class="num">${item.actualWeight.toFixed(3)} g</td>
-          <td class="num">${item.stoneWeight.toFixed(3)} g</td>
-          <td class="num">${item.netGoldWeight.toFixed(3)} g</td>
-          <td class="num">${formatOrderCurrency(item.goldPrice)}</td>
-          <td class="num">${formatOrderCurrency(item.makingCharge)}</td>
+          <td class="num">${item.weight.toFixed(3)}</td>
+          <td class="num">${item.stoneCount}</td>
+          <td class="num">${formatOrderCurrency(item.pricePerUnit)}</td>
+          <td class="num">${item.gstRate}%</td>
           <td class="num">${formatOrderCurrency(item.gstAmount)}</td>
           <td class="num">${formatOrderCurrency(item.totalAmount)}</td>
         </tr>`,
@@ -293,12 +264,11 @@ export const buildInvoiceBillMarkup = (invoice: BillingInvoice) => {
           <tr>
             <th>#</th>
             <th>Item</th>
-            <th class="num">Gross Wt</th>
-            <th class="num">Stone Wt</th>
-            <th class="num">Net Gold</th>
-            <th class="num">Gold Value</th>
-            <th class="num">Making</th>
+            <th class="num">Weight</th>
+            <th class="num">Stone Count</th>
+            <th class="num">Rate / Unit</th>
             <th class="num">GST</th>
+            <th class="num">GST Amt</th>
             <th class="num">Amount</th>
           </tr>
         </thead>
@@ -322,7 +292,7 @@ export const buildInvoiceBillMarkup = (invoice: BillingInvoice) => {
 
       <div class="footer">
         <p>This invoice is formatted for A4 printing.</p>
-        <p>Please verify product weights, stone deductions, and GST values before handing it to the customer.</p>
+        <p>Please verify product weights, pricing, and GST values before handing it to the customer.</p>
       </div>
     </div>
   </body>

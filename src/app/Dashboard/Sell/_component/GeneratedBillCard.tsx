@@ -79,7 +79,7 @@ export default function GeneratedBillCard({ invoice }: GeneratedBillCardProps) {
                 <div>
                   <p className="font-medium">{item.productName}</p>
                   <p className="text-muted-foreground">
-                    {item.sku} | {item.actualWeight.toFixed(3)} g
+                    {item.sku} | {item.weight.toFixed(3)}
                   </p>
                 </div>
                 <p className="font-medium">{formatOrderCurrency(item.totalAmount)}</p>

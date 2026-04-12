@@ -14,7 +14,14 @@ const endpoints = {
     update: (id: string) => `/products/${id}`,
     delete: (id: string) => `/products/${id}`,
     activate: (id: string) => `/products/${id}/activate`,
-    returnToAdmin: (id: string) => `/products/${id}/return`,
+  },
+
+  categories: {
+    create: `/categories`,
+    getAll: `/categories`,
+    getById: (id: string) => `/categories/${id}`,
+    update: (id: string) => `/categories/${id}`,
+    delete: (id: string) => `/categories/${id}`,
   },
 
   stores: {

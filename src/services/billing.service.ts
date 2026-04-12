@@ -17,16 +17,14 @@ type StoreInventoryApiItem = {
   allocatedStones?: number;
   soldStones?: number;
   returnedStones?: number;
-  stoneWeight?: number;
   product?: {
     id: string;
     name?: string;
     sku?: string;
-    category?: string;
-    purity?: string;
+    categoryId?: string;
     hsnCode?: string;
-    makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
-    makingCharge?: number;
+    weightUnit?: "RATI" | "CARAT";
+    pricePerUnit?: number;
     gstRate?: number;
   };
 };
@@ -49,16 +47,11 @@ type InvoiceApiItem = {
   productId?: string;
   productName?: string;
   sku?: string;
-  purity?: string;
   hsnCode?: string;
-  allocatedWeight?: number | null;
+  weight?: number;
   actualWeight?: number;
   stoneCount?: number;
-  stoneWeight?: number;
-  netGoldWeight?: number;
-  ratePerGram?: number;
-  goldPrice?: number;
-  makingCharge?: number;
+  pricePerUnit?: number;
   gstRate?: number;
   gstAmount?: number;
   totalAmount?: number;
@@ -105,18 +98,16 @@ const normalizeSellableProduct = (item: StoreInventoryApiItem): SellableProduct 
   id: item.product?.id ?? item.productId,
   name: item.product?.name ?? "Unnamed Product",
   sku: item.product?.sku ?? "N/A",
-  category: item.product?.category ?? "",
-  purity: item.product?.purity ?? "",
+  categoryId: item.product?.categoryId,
   hsnCode: item.product?.hsnCode ?? "",
-  makingChargeType: item.product?.makingChargeType,
-  makingCharge: item.product?.makingCharge ?? 0,
+  weightUnit: item.product?.weightUnit ?? "CARAT",
+  pricePerUnit: item.product?.pricePerUnit ?? 0,
   gstRate: item.product?.gstRate ?? 0,
   availableWeight: item.availableWeight ?? 0,
   availableStones: Math.max(
     0,
     (item.allocatedStones ?? 0) - (item.soldStones ?? 0) + (item.returnedStones ?? 0),
   ),
-  stoneWeight: item.stoneWeight ?? 0,
 });
 
 const normalizeInvoiceStore = (
@@ -142,16 +133,10 @@ const normalizeInvoiceItem = (item: InvoiceApiItem, invoiceId: string): BillingI
   productId: item.productId ?? "",
   productName: item.productName ?? "Unnamed Product",
   sku: item.sku ?? "N/A",
-  purity: item.purity ?? "",
   hsnCode: item.hsnCode ?? "",
-  allocatedWeight: item.allocatedWeight ?? null,
-  actualWeight: item.actualWeight ?? 0,
+  weight: item.weight ?? item.actualWeight ?? 0,
   stoneCount: item.stoneCount ?? 0,
-  stoneWeight: item.stoneWeight ?? 0,
-  netGoldWeight: item.netGoldWeight ?? 0,
-  ratePerGram: item.ratePerGram ?? 0,
-  goldPrice: item.goldPrice ?? 0,
-  makingCharge: item.makingCharge ?? 0,
+  pricePerUnit: item.pricePerUnit ?? 0,
   gstRate: item.gstRate ?? 0,
   gstAmount: item.gstAmount ?? 0,
   totalAmount: item.totalAmount ?? 0,
@@ -185,7 +170,7 @@ const normalizeInvoice = (invoice: NonNullable<InvoiceApiResponse["data"]>): Bil
         updatedAt: invoice.customer.updatedAt,
       }
     : null,
-  store: normalizeInvoiceStore(invoice.store, invoice.storeId ?? ""),
+  store: normalizeInvoiceStore(invoice.store ?? null, invoice.storeId ?? ""),
 });
 
 export const billingService = {

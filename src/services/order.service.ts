@@ -42,16 +42,13 @@ type InvoiceDetailApiItem = {
   productId?: string;
   productName?: string;
   sku?: string;
-  purity?: string;
   hsnCode?: string;
-  actualWeight?: number;
-  ratePerGram?: number;
-  goldPrice?: number;
-  makingCharge?: number;
+  weight?: number;
+  stoneCount?: number;
+  pricePerUnit?: number;
   gstRate?: number;
   gstAmount?: number;
   totalAmount?: number;
-  stoneWeight?: number;
   rfid?: string;
   isReturned?: boolean;
 };
@@ -86,26 +83,32 @@ type InvoiceListResponse = {
 const normalizeOrderStatus = (status?: string): OrderStatus => {
   if (status === "CANCELLED") return OrderStatus.CANCELLED;
   if (status === "DRAFT") return OrderStatus.PENDING;
+  if (status === "PARTIALLY_RETURNED") return OrderStatus.PARTIALLY_RETURNED;
+  if (status === "FULLY_RETURNED") return OrderStatus.FULLY_RETURNED;
   return OrderStatus.COMPLETED;
 };
 
-const normalizeLineItem = (item: InvoiceDetailApiItem): OrderLineItem => ({
-  id: item.id,
-  productId: item.productId ?? "",
-  productName: item.productName ?? "Unnamed Product",
-  sku: item.sku ?? "N/A",
-  category: item.purity ?? "Jewellery",
-  quantity: 1,
-  actualWeight: item.actualWeight ?? 0,
-  stoneWeight: item.stoneWeight ?? 0,
-  rfid: item.rfid ?? "",
-  isReturned: item.isReturned ?? false,
-  unitPrice: (item.goldPrice ?? 0) + (item.makingCharge ?? 0),
-  taxRate: item.gstRate ?? 0,
-  lineSubtotal: (item.goldPrice ?? 0) + (item.makingCharge ?? 0),
-  lineTax: item.gstAmount ?? 0,
-  lineTotal: item.totalAmount ?? 0,
-});
+const normalizeLineItem = (item: InvoiceDetailApiItem): OrderLineItem => {
+  const lineSubtotal = (item.totalAmount ?? 0) - (item.gstAmount ?? 0);
+
+  return {
+    id: item.id,
+    productId: item.productId ?? "",
+    productName: item.productName ?? "Unnamed Product",
+    sku: item.sku ?? "N/A",
+    category: item.hsnCode ?? "Jewellery",
+    quantity: 1,
+    actualWeight: item.weight ?? 0,
+    stoneCount: item.stoneCount ?? 0,
+    rfid: item.rfid ?? "",
+    isReturned: item.isReturned ?? false,
+    unitPrice: item.pricePerUnit ?? 0,
+    taxRate: item.gstRate ?? 0,
+    lineSubtotal,
+    lineTax: item.gstAmount ?? 0,
+    lineTotal: item.totalAmount ?? 0,
+  };
+};
 
 const normalizeOrder = (invoice: InvoiceListApiItem): OrderListItem => ({
   id: invoice.id,
@@ -167,7 +170,11 @@ const buildInvoicesQuery = (params?: OrderSearchParams) => {
         ? "DRAFT"
         : params.status === "cancelled"
           ? "CANCELLED"
-          : "COMPLETED";
+          : params.status === "partially_returned"
+            ? "PARTIALLY_RETURNED"
+            : params.status === "fully_returned"
+              ? "FULLY_RETURNED"
+              : "COMPLETED";
     query.set("status", backendStatus);
   }
 

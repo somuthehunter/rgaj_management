@@ -12,6 +12,7 @@ export default function CategoryTable({
   categories,
   onDeactivate,
   onActivate,
+  canManage,
 }: CategoryTableProps) {
   const columns: DataTableColumn<CategoryRow>[] = [
     {
@@ -27,22 +28,12 @@ export default function CategoryTable({
       },
     },
     {
-      id: "slug",
-      header: "Slug",
-      cell: (category) => category.slug,
-    },
-    {
       id: "description",
       header: "Description",
       cell: (category) =>
         category.description || (
           <span className="text-muted-foreground">No description</span>
         ),
-    },
-    {
-      id: "products",
-      header: "Products",
-      cell: (category) => <Badge variant="outline">{category.productCount}</Badge>,
     },
     {
       id: "status",
@@ -62,31 +53,37 @@ export default function CategoryTable({
 
         return (
           <div className="flex gap-2">
-            <AddCategoryDialog
-              mode="edit"
-              category={category}
-              trigger={
-                <Button size="icon" variant="ghost">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              }
-            />
+            {canManage ? (
+              <>
+                <AddCategoryDialog
+                  mode="edit"
+                  category={category}
+                  trigger={
+                    <Button size="icon" variant="ghost">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  }
+                />
 
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() =>
-                active
-                  ? onDeactivate(category.id)
-                  : onActivate(category.id)
-              }
-            >
-              {active ? (
-                <Ban className="h-4 w-4 text-destructive" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              )}
-            </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() =>
+                    active
+                      ? onDeactivate(category.id)
+                      : onActivate(category.id)
+                  }
+                >
+                  {active ? (
+                    <Ban className="h-4 w-4 text-destructive" />
+                  ) : (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                  )}
+                </Button>
+              </>
+            ) : (
+              <Badge variant="secondary">View only</Badge>
+            )}
           </div>
         );
       },

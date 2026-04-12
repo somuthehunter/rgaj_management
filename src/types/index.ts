@@ -14,6 +14,8 @@ export enum TransactionType {
 export enum OrderStatus {
   PENDING = "PENDING",
   COMPLETED = "COMPLETED",
+  PARTIALLY_RETURNED = "PARTIALLY_RETURNED",
+  FULLY_RETURNED = "FULLY_RETURNED",
   CANCELLED = "CANCELLED",
 }
 

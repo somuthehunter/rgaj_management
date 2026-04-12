@@ -8,7 +8,7 @@ export type OrderLineItem = {
   category: string;
   quantity: number;
   actualWeight?: number;
-  stoneWeight?: number;
+  stoneCount?: number;
   rfid?: string;
   isReturned?: boolean;
   unitPrice: number;
@@ -42,7 +42,13 @@ export type OrderListItem = {
   notes?: string;
 };
 
-export type OrderSearchStatus = "pending" | "completed" | "cancelled" | "";
+export type OrderSearchStatus =
+  | "pending"
+  | "completed"
+  | "partially_returned"
+  | "fully_returned"
+  | "cancelled"
+  | "";
 
 export type OrderSearchParams = {
   search?: string;

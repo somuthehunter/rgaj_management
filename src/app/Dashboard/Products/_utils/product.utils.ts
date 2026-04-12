@@ -1,5 +1,5 @@
 import { ApiErrorPayload, ProductListItem } from "@/types/product";
-import { ProductFormValues, makingChargeTypes } from "@/schemas/product.schema";
+import { ProductFormValues, weightUnits } from "@/schemas/product.schema";
 
 export const getProductErrorMessage = (
   error: unknown,
@@ -42,14 +42,13 @@ export const getProductFormDefaults = (
   product?: ProductListItem,
 ): ProductFormValues => ({
   name: product?.name ?? "",
-  sku: product?.sku ?? "",
-  category: product?.category ?? "",
-  purity: product?.purity ?? "",
+  sku: product?.sku === "N/A" ? "" : (product?.sku ?? ""),
+  categoryId: product?.categoryId ?? "",
+  weightUnit:
+    product?.weightUnit && weightUnits.includes(product.weightUnit)
+      ? product.weightUnit
+      : "CARAT",
+  pricePerUnit: Number(product?.pricePerUnit ?? 0),
   hsnCode: product?.hsnCode ?? "",
-  makingChargeType:
-    product?.makingChargeType && makingChargeTypes.includes(product.makingChargeType)
-      ? product.makingChargeType
-      : "PERCENTAGE",
-  makingCharge: Number(product?.makingCharge ?? 0),
   gstRate: Number(product?.gstRate ?? 3),
 });

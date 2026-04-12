@@ -7,10 +7,12 @@ import { Pencil, Ban, CheckCircle2 } from "lucide-react";
 import AddProductDialog from "./AddProductDialog";
 import { isProductActive } from "../_utils/product.utils";
 import { ProductRow, ProductTableProps } from "../_types/product-table.types";
+import { formatOrderCurrency } from "@/app/Dashboard/Orders/_utils/order.utils";
 
 export default function ProductTable({
   products,
-  isAdmin,
+  canManageStatus,
+  canEdit,
   onDeactivate,
   onActivate,
 }: ProductTableProps) {
@@ -41,17 +43,26 @@ export default function ProductTable({
 
         return (
           <div className="flex items-center gap-2">
-            <Badge variant="outline">{product.category}</Badge>
+            <Badge variant="outline">{product.categoryName}</Badge>
             {!active && <Badge variant="secondary">Deactivated</Badge>}
           </div>
         );
       },
     },
     {
-      id: "charges",
-      header: "Charges",
-      cell: (product) =>
-        `${product.makingChargeType ?? "-"} / GST ${product.gstRate ?? 0}%`,
+      id: "unit",
+      header: "Weight Unit",
+      cell: (product) => product.weightUnit,
+    },
+    {
+      id: "price",
+      header: "Price / Unit",
+      cell: (product) => formatOrderCurrency(product.pricePerUnit),
+    },
+    {
+      id: "tax",
+      header: "GST",
+      cell: (product) => `${product.gstRate ?? 0}%`,
     },
     {
       id: "actions",
@@ -61,30 +72,37 @@ export default function ProductTable({
 
         return (
           <div className="flex gap-2">
-            <AddProductDialog
-              mode="edit"
-              product={product}
-              trigger={
-                <Button size="icon" variant="ghost">
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              }
-            />
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={() =>
-                active
-                  ? onDeactivate(product.id)
-                  : onActivate(product.id)
-              }
-            >
-              {active ? (
-                <Ban className="h-4 w-4 text-destructive" />
-              ) : (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-              )}
-            </Button>
+            {canEdit ? (
+              <AddProductDialog
+                mode="edit"
+                product={product}
+                trigger={
+                  <Button size="icon" variant="ghost">
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            ) : null}
+            {canManageStatus ? (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() =>
+                  active
+                    ? onDeactivate(product.id)
+                    : onActivate(product.id)
+                }
+              >
+                {active ? (
+                  <Ban className="h-4 w-4 text-destructive" />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                )}
+              </Button>
+            ) : null}
+            {!canEdit && !canManageStatus ? (
+              <span className="text-xs text-muted-foreground">View only</span>
+            ) : null}
           </div>
         );
       },
@@ -93,7 +111,7 @@ export default function ProductTable({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="min-w-[720px]">
+      <div className="min-w-[860px]">
         <DataTable
           data={products}
           columns={columns}

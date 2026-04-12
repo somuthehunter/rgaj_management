@@ -18,25 +18,15 @@ const optionalEmailField = z
 
 export const billItemSchema = z.object({
   productId: z.string().min(1, "Product is required"),
-  actualWeight: z
+  weight: z
     .number({ error: "Weight is required" })
     .positive("Weight must be greater than 0"),
-  stoneWeight: z
-    .number({ error: "Stone weight must be a number" })
-    .min(0, "Stone weight cannot be negative")
-    .optional(),
   stoneCount: z
     .number({ error: "Stone count must be a number" })
     .int("Stone count must be a whole number")
     .min(0, "Stone count cannot be negative")
     .optional(),
-}).refine(
-  (value) => (value.stoneWeight ?? 0) <= value.actualWeight,
-  {
-    message: "Stone weight cannot be greater than item weight",
-    path: ["stoneWeight"],
-  },
-);
+});
 
 export const billSchema = z.object({
   storeId: z.string().optional(),
@@ -44,9 +34,6 @@ export const billSchema = z.object({
   customerPhone: optionalPhoneField,
   customerEmail: optionalEmailField,
   customerAddress: optionalTextField,
-  goldRatePerGram: z
-    .number({ error: "Gold rate is required" })
-    .positive("Gold rate must be greater than 0"),
   paymentMethod: z.enum(paymentMethods, {
     error: "Please select a payment method",
   }),

@@ -20,10 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { makingChargeTypes } from "@/schemas/product.schema";
 import { useProductDialogForm } from "../_hooks/useProductDialogForm";
 import { AddProductDialogProps } from "../_types/product-dialog.types";
 import { productService } from "@/services/product.service";
+import { categoryService } from "@/services/category.service";
+import { weightUnits } from "@/schemas/product.schema";
 
 export default function AddProductDialog({
   mode = "add",
@@ -35,6 +36,11 @@ export default function AddProductDialog({
     queryKey: ["product-details", product?.id],
     queryFn: () => productService.getById(product!.id),
     enabled: open && mode === "edit" && Boolean(product?.id),
+  });
+  const categoriesQuery = useQuery({
+    queryKey: ["product-category-options"],
+    queryFn: () => categoryService.getAll({ isActive: true, page: 1, limit: 200 }),
+    enabled: open,
   });
   const { form, pending, isEditMode, onSubmit } = useProductDialogForm({
     mode,
@@ -65,8 +71,8 @@ export default function AddProductDialog({
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pt-2">
           <div className="space-y-2">
-            <Label>Name</Label>
-            <Input {...form.register("name")} />
+            <Label>Name *</Label>
+            <Input placeholder="Enter product name" {...form.register("name")} />
             <p className="text-sm text-destructive">
               {form.formState.errors.name?.message}
             </p>
@@ -74,7 +80,7 @@ export default function AddProductDialog({
 
           <div className="space-y-2">
             <Label>SKU</Label>
-            <Input {...form.register("sku")} />
+            <Input placeholder="Leave blank to auto-generate" {...form.register("sku")} />
             <p className="text-sm text-destructive">
               {form.formState.errors.sku?.message}
             </p>
@@ -82,81 +88,91 @@ export default function AddProductDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label>Purity</Label>
-              <Input placeholder="18K" {...form.register("purity")} />
-              <p className="text-sm text-destructive">
-                {form.formState.errors.purity?.message}
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>HSN Code</Label>
-              <Input {...form.register("hsnCode")} />
-              <p className="text-sm text-destructive">
-                {form.formState.errors.hsnCode?.message}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Category</Label>
-            <Input {...form.register("category")} />
-            <p className="text-sm text-destructive">
-              {form.formState.errors.category?.message}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>GST Rate</Label>
-            <Input
-              type="number"
-              step="0.01"
-              {...form.register("gstRate", { valueAsNumber: true })}
-            />
-            <p className="text-sm text-destructive">
-              {form.formState.errors.gstRate?.message}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label>Making Charge Type</Label>
+              <Label>Category *</Label>
               <Select
-                value={form.watch("makingChargeType")}
-                onValueChange={(value) =>
-                  form.setValue(
-                    "makingChargeType",
-                    value as (typeof makingChargeTypes)[number],
-                  )
-                }
+                value={form.watch("categoryId")}
+                onValueChange={(value) => form.setValue("categoryId", value, { shouldValidate: true })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select charge type" />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {makingChargeTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                  {(categoriesQuery.data?.data ?? []).map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-sm text-destructive">
-                {form.formState.errors.makingChargeType?.message}
+                {form.formState.errors.categoryId?.message}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Making Charge</Label>
+              <Label>Weight Unit *</Label>
+              <Select
+                value={form.watch("weightUnit")}
+                onValueChange={(value) =>
+                  form.setValue("weightUnit", value as (typeof weightUnits)[number], {
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  {weightUnits.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-destructive">
+                {form.formState.errors.weightUnit?.message}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label>Price Per Unit *</Label>
               <Input
                 type="number"
                 step="0.01"
-                {...form.register("makingCharge", { valueAsNumber: true })}
+                min="0"
+                placeholder="Enter price per unit"
+                {...form.register("pricePerUnit", { valueAsNumber: true })}
               />
               <p className="text-sm text-destructive">
-                {form.formState.errors.makingCharge?.message}
+                {form.formState.errors.pricePerUnit?.message}
               </p>
             </div>
+
+            <div className="space-y-2">
+              <Label>GST Rate *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                placeholder="Enter GST rate"
+                {...form.register("gstRate", { valueAsNumber: true })}
+              />
+              <p className="text-sm text-destructive">
+                {form.formState.errors.gstRate?.message}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>HSN Code *</Label>
+            <Input placeholder="Enter HSN code" {...form.register("hsnCode")} />
+            <p className="text-sm text-destructive">
+              {form.formState.errors.hsnCode?.message}
+            </p>
           </div>
 
           <Button type="submit" className="w-full" disabled={pending}>
