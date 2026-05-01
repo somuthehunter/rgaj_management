@@ -71,7 +71,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
       const res = await fetch(base_url + endpoints.auth.refresh, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // credentials: "include",
+        credentials: "include",
         body: JSON.stringify({
           refreshToken:
             typeof window !== "undefined"
@@ -113,7 +113,7 @@ const requestService = async (
   const res = await fetch(url, {
     ...init,
     headers: getAuthHeaders(header),
-    // credentials: "include",
+    credentials: "include",
   });
 
   if (res.status !== 401) {
@@ -139,7 +139,7 @@ const requestService = async (
   const retryRes = await fetch(url, {
     ...init,
     headers: getAuthHeaders(header),
-    // credentials: "include",
+    credentials: "include",
   });
 
   if (retryRes.status === 401) {

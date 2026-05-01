@@ -22,8 +22,15 @@ export default function TransactionTable({
       header: "Action",
       cell: (transaction) => (
         <div>
-          <p className="font-medium">{formatTransactionLabel(transaction.action)}</p>
-          <p className="text-xs text-muted-foreground">{formatTransactionLabel(transaction.entity)}</p>
+          <Badge
+            variant="outline"
+            className={getTransactionActionClasses(transaction.action)}
+          >
+            {formatTransactionLabel(transaction.action)}
+          </Badge>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatTransactionLabel(transaction.entity)}
+          </p>
         </div>
       ),
     },
@@ -70,26 +77,7 @@ export default function TransactionTable({
       <div className="min-w-[980px]">
         <DataTable
           data={transactions}
-          columns={columns.map((column) =>
-            column.id === "action"
-              ? {
-                  ...column,
-                  cell: (transaction) => (
-                    <div>
-                      <Badge
-                        variant="outline"
-                        className={getTransactionActionClasses(transaction.action)}
-                      >
-                        {formatTransactionLabel(transaction.action)}
-                      </Badge>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {formatTransactionLabel(transaction.entity)}
-                      </p>
-                    </div>
-                  ),
-                }
-              : column,
-          )}
+          columns={columns}
           getRowKey={(transaction) => transaction.id}
           emptyMessage="No audit logs found."
         />

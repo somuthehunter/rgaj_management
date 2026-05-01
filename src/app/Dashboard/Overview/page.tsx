@@ -164,7 +164,7 @@ export default function OverviewPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" fontSize={12} />
                     <YAxis fontSize={12} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Tooltip formatter={(value?: number) => formatCurrency(value ?? 0)} />
                     <Area
                       type="monotone"
                       dataKey="value"
@@ -193,7 +193,7 @@ export default function OverviewPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" fontSize={11} />
                     <YAxis fontSize={12} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Tooltip formatter={(value?: number) => formatCurrency(value ?? 0)} />
                     <Bar
                       dataKey="value"
                       fill="hsl(var(--primary))"

@@ -369,7 +369,7 @@ export const statsService = {
     if (role === UserRole.CASHIER) {
       const [invoices, refunds] = await Promise.all([
         fetchAllInvoices({
-          storeId: scopedStoreId,
+          storeId: scopedStoreId ?? "",
           cashierId: user?.id ?? "",
         }),
         fetchAllRefunds(scopedStoreId ? { storeId: scopedStoreId } : undefined),

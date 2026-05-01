@@ -297,7 +297,7 @@ export default function StatisticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" fontSize={11} />
                   <YAxis fontSize={12} />
-                  <Tooltip formatter={(value: number) => formatOrderCurrency(value)} />
+                  <Tooltip formatter={(value?: number) => formatOrderCurrency(value ?? 0)} />
                   <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -325,7 +325,7 @@ export default function StatisticsPage() {
                       <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => formatOrderCurrency(value)} />
+                  <Tooltip formatter={(value?: number) => formatOrderCurrency(value ?? 0)} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
