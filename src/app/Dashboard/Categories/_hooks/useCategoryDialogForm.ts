@@ -9,7 +9,6 @@ import { useCategoryMutations } from "./useCategoryMutations";
 import {
   getCategoryErrorMessage,
   getCategoryFormDefaults,
-  slugifyCategoryName,
 } from "../_utils/category.utils";
 import { UseCategoryDialogFormParams } from "../_types/category-dialog.types";
 
@@ -33,19 +32,6 @@ export const useCategoryDialogForm = ({
   }, [open, category, form]);
 
   const pending = createCategory.isPending || updateCategory.isPending;
-  const watchedName = form.watch("name");
-  const watchedSlug = form.watch("slug");
-
-  useEffect(() => {
-    if (isEditMode && category) return;
-    if (!watchedName) return;
-
-    const generatedSlug = slugifyCategoryName(watchedName);
-    if (!watchedSlug || watchedSlug === slugifyCategoryName(watchedSlug)) {
-      form.setValue("slug", generatedSlug, { shouldValidate: true });
-    }
-  }, [watchedName, watchedSlug, form, isEditMode, category]);
-
   const onSubmit = (data: CategoryFormValues) => {
     if (isEditMode && category?.id) {
       updateCategory.mutate(

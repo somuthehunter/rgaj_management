@@ -7,7 +7,7 @@ import { ProductFormValues } from "@/schemas/product.schema";
 
 type UpdateProductPayload = {
   id: string;
-  data: object;
+  data: Partial<ProductFormValues>;
 };
 
 export const useProductMutations = () => {
@@ -37,32 +37,10 @@ export const useProductMutations = () => {
     onSuccess: invalidate,
   });
 
-  // const distributeProduct = useMutation({
-  //   mutationFn: ({
-  //     productId,
-  //     storeId,
-  //     qty,
-  //   }: {
-  //     productId: string;
-  //     storeId: string;
-  //     qty: number;
-  //   }) =>
-  //     productService.distribute(productId, storeId, qty),
-  //   onSuccess: invalidate,
-  // });
-
-  const returnProduct = useMutation({
-    mutationFn: ({ id, qty }: { id: string; qty: number }) =>
-      productService.returnToAdmin(id, qty),
-    onSuccess: invalidate,
-  });
-
   return {
     createProduct,
     updateProduct,
     deleteProduct,
     activateProduct,
-    // distributeProduct,
-    returnProduct,
   };
 };

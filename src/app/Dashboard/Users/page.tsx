@@ -24,7 +24,7 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 
 export default function UsersPage() {
   const filters = useUserFiltersState();
-  const { data, isLoading } = useUsers(filters.queryParams);
+  const { data, isLoading, isError, error } = useUsers(filters.queryParams);
   const { selectControls } = useUserFilterControls({
     storeFilter: filters.storeFilter,
     roleFilter: filters.roleFilter,
@@ -51,7 +51,7 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-bold">Users</h1>
           <p className="text-sm text-muted-foreground">
-            Manage super admins, store admins, role assignments, and account status.
+            Manage super admins, store admins, cashiers, role assignments, and account status.
           </p>
         </div>
         <AddUserDialog />
@@ -60,13 +60,17 @@ export default function UsersPage() {
       <ListControlsBar
         searchValue={filters.searchInput}
         onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search users by name, email, or phone..."
+        searchPlaceholder="Search users by name, email, or store..."
         onReset={filters.resetFilters}
         selectControls={selectControls}
       />
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load users."}
+        </p>
       ) : (
         <div className="space-y-4">
           <UserTable

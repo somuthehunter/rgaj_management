@@ -1,6 +1,7 @@
 import { ApiErrorPayload } from "@/types/product";
 import { UserFormValues } from "@/schemas/user.schema";
 import { UserListItem } from "@/types/user";
+import { UserRole } from "@/types";
 
 export const getUserEntityErrorMessage = (error: unknown, fallback: string) => {
   if (!error) return fallback;
@@ -29,9 +30,10 @@ export const isUserEntityActive = (user: UserListItem) => {
 };
 
 export const getUserFormDefaults = (user?: UserListItem): UserFormValues => ({
-  name: user?.name ?? "",
+  firstName: user?.firstName ?? "",
+  lastName: user?.lastName ?? "",
   email: user?.email ?? "",
-  phone: user?.phone ?? "",
-  role: user?.role ?? "STORE_ADMIN",
+  password: "",
+  role: user?.role ?? UserRole.STORE_ADMIN,
   storeId: user?.storeId ?? "",
 });

@@ -34,7 +34,7 @@ export const useProductDialogForm = ({
   const pending = createProduct.isPending || updateProduct.isPending;
 
   const onSubmit = (data: ProductFormValues) => {
-    const { quantity, ...payload } = data;
+    const payload = data;
 
     if (isEditMode && product?.id) {
       updateProduct.mutate(

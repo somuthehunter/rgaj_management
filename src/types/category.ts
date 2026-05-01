@@ -1,13 +1,12 @@
 export type CategoryListItem = {
   id: string;
   name: string;
-  slug: string;
   description?: string;
-  productCount: number;
   isActive?: boolean;
   active?: boolean;
   status?: string;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 export type CategorySearchStatus = "active" | "deactivated" | "";
@@ -20,4 +19,5 @@ export type CategorySearchParams = {
   sortOrder?: "asc" | "desc" | "";
   page?: number;
   limit?: number;
+  includeInactive?: boolean;
 };

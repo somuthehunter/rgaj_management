@@ -16,10 +16,10 @@ import { Download, Eye } from "lucide-react";
 import { TransactionLogItem } from "@/types/transaction";
 import {
   downloadTransactionSummary,
+  formatTransactionChanges,
   formatTransactionDate,
-  formatTransactionEventLabel,
-  formatTransactionMetadata,
-  getTransactionEventClasses,
+  formatTransactionLabel,
+  getTransactionActionClasses,
 } from "../_utils/transaction.utils";
 
 type TransactionDetailsDialogProps = {
@@ -32,7 +32,7 @@ export default function TransactionDetailsDialog({
   trigger,
 }: TransactionDetailsDialogProps) {
   const [open, setOpen] = useState(false);
-  const metadata = formatTransactionMetadata(transaction.metadata);
+  const changes = formatTransactionChanges(transaction.changes);
 
   const fallbackTrigger = useMemo(
     () => (
@@ -53,18 +53,20 @@ export default function TransactionDetailsDialog({
             <DialogHeader className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <DialogTitle>{transaction.title}</DialogTitle>
+                  <DialogTitle>
+                    {formatTransactionLabel(transaction.action)} {formatTransactionLabel(transaction.entity)}
+                  </DialogTitle>
                   <DialogDescription>
-                    System activity log detail for this event.
+                    System audit log detail for this event.
                   </DialogDescription>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className={getTransactionEventClasses(transaction.eventType)}
+                    className={getTransactionActionClasses(transaction.action)}
                   >
-                    {formatTransactionEventLabel(transaction.eventType)}
+                    {formatTransactionLabel(transaction.action)}
                   </Badge>
                   <Button
                     variant="outline"
@@ -82,16 +84,16 @@ export default function TransactionDetailsDialog({
                 <h3 className="text-sm font-semibold">Event Details</h3>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
-                    <span className="font-medium text-foreground">Module:</span>{" "}
-                    {transaction.module}
+                    <span className="font-medium text-foreground">Action:</span>{" "}
+                    {formatTransactionLabel(transaction.action)}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Entity:</span>{" "}
-                    {transaction.entityName || "Not specified"}
+                    {formatTransactionLabel(transaction.entity)}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Reference ID:</span>{" "}
-                    {transaction.referenceId || "Not available"}
+                    <span className="font-medium text-foreground">Entity ID:</span>{" "}
+                    {transaction.entityId || "Not available"}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Date:</span>{" "}
@@ -101,39 +103,32 @@ export default function TransactionDetailsDialog({
               </section>
 
               <section className="rounded-lg border p-4">
-                <h3 className="text-sm font-semibold">Actor Details</h3>
+                <h3 className="text-sm font-semibold">Request Context</h3>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
-                    <span className="font-medium text-foreground">Performed By:</span>{" "}
-                    {transaction.performedBy}
+                    <span className="font-medium text-foreground">User ID:</span>{" "}
+                    {transaction.userId}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Role:</span>{" "}
-                    {transaction.role}
+                    <span className="font-medium text-foreground">IP Address:</span>{" "}
+                    {transaction.ipAddress || "Not available"}
                   </p>
                   <p>
-                    <span className="font-medium text-foreground">Store:</span>{" "}
-                    {transaction.storeName || "System-wide"}
+                    <span className="font-medium text-foreground">User Agent:</span>{" "}
+                    {transaction.userAgent || "Not available"}
                   </p>
                 </div>
               </section>
             </div>
 
-            <section className="mt-6 rounded-lg border p-4">
-              <h3 className="text-sm font-semibold">Description</h3>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {transaction.description}
-              </p>
-            </section>
-
-            {metadata.length > 0 && (
+            {changes.length > 0 && (
               <section className="mt-6 rounded-lg border p-4">
-                <h3 className="text-sm font-semibold">Metadata</h3>
+                <h3 className="text-sm font-semibold">Changes</h3>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {metadata.map((item) => (
+                  {changes.map((item) => (
                     <div key={item.label} className="rounded-md border bg-muted/30 p-3">
                       <p className="text-xs text-muted-foreground">{item.label}</p>
-                      <p className="mt-1 text-sm font-medium">{item.value}</p>
+                      <p className="mt-1 break-all text-sm font-medium">{item.value}</p>
                     </div>
                   ))}
                 </div>

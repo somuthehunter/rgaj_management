@@ -3,16 +3,17 @@ import { UserRole } from "@/types";
 export type UserListItem = {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
-  phone: string;
   role: UserRole;
-  storeId?: string;
+  storeId?: string | null;
   storeName?: string;
   isActive?: boolean;
   status?: string;
   deactivatedAt?: string;
   createdAt?: string;
-  lastLoginAt?: string;
+  updatedAt?: string;
 };
 
 export type UserSearchStatus = "active" | "deactivated" | "";

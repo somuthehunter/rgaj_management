@@ -3,12 +3,12 @@
 import { Button } from "@/components/ui/button";
 import ListControlsBar from "@/components/shared/ListControlsBar";
 import { Download } from "lucide-react";
+import AddCustomerDialog from "./_component/AddCustomerDialog";
 import CustomerPagination from "./_component/CustomerPagination";
 import CustomerTable from "./_component/CustomerTable";
 import { useCustomerFilterControls } from "./_hooks/useCustomerFilterControls";
 import { useCustomerFiltersState } from "./_hooks/useCustomerFiltersState";
 import { useCustomers } from "./_hooks/useCustomers";
-import { customerService } from "@/services/customer.service";
 import { downloadCustomersCsv } from "./_utils/customer.utils";
 
 const buildPageNumbers = (currentPage: number, totalPages: number) => {
@@ -29,7 +29,7 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 
 export default function CustomersPage() {
   const filters = useCustomerFiltersState();
-  const { data, isLoading } = useCustomers(filters.queryParams);
+  const { data, isLoading, isError, error } = useCustomers(filters.queryParams);
   const { selectControls } = useCustomerFilterControls({
     customers: data?.data,
     storeFilter: filters.storeFilter,
@@ -55,6 +55,7 @@ export default function CustomersPage() {
             Track customer purchase history, review all linked orders, and export customer data.
           </p>
         </div>
+        <AddCustomerDialog />
       </div>
 
       <ListControlsBar
@@ -67,7 +68,7 @@ export default function CustomersPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => downloadCustomersCsv(customerService.getExportRows())}
+            onClick={() => downloadCustomersCsv(data?.data ?? [])}
           >
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -77,6 +78,10 @@ export default function CustomersPage() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load customers."}
+        </p>
       ) : (
         <div className="space-y-4">
           <CustomerTable customers={data?.data} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -20,26 +21,53 @@ import {
 } from "@/components/ui/select";
 import { Boxes } from "lucide-react";
 import { toast } from "sonner";
-import { Store } from "@/types";
 import { ProductListItem } from "@/types/product";
-import { InventoryMeasurementUnit } from "@/types/inventory";
+import { StoreListItem } from "@/types/store";
+import { inventoryService } from "@/services/inventory.service";
+import { QUERY_KEYS } from "@/constants/query_keys";
 
 type InventoryDistributeDialogProps = {
   products?: ProductListItem[];
-  stores: Store[];
+  stores: StoreListItem[];
 };
 
 export default function InventoryDistributeDialog({
   products = [],
   stores,
 }: InventoryDistributeDialogProps) {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [productId, setProductId] = useState("");
   const [storeId, setStoreId] = useState("");
-  const [quantityNumber, setQuantityNumber] = useState("");
-  const [measuredQuantity, setMeasuredQuantity] = useState("");
-  const [measurementUnit, setMeasurementUnit] =
-    useState<InventoryMeasurementUnit>("ratti");
+  const [weight, setWeight] = useState("");
+  const [stoneCount, setStoneCount] = useState("");
+  const [stoneWeight, setStoneWeight] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const allocateMutation = useMutation({
+    mutationFn: inventoryService.allocate,
+    onSuccess: async () => {
+      toast.success("Inventory allocated successfully.");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.INVENTORY] }),
+        queryClient.invalidateQueries({ queryKey: ["central-inventory-products"] }),
+        queryClient.invalidateQueries({ queryKey: ["central-inventory-list"] }),
+      ]);
+      setOpen(false);
+      resetForm();
+    },
+    onError: (error) => {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to allocate inventory.";
+      if (message.toLowerCase().includes("centralinventory")) {
+        toast.error("This product has no stock in Central Inventory yet.");
+        return;
+      }
+      toast.error(message);
+    },
+  });
 
   const productOptions = useMemo(
     () =>
@@ -55,16 +83,22 @@ export default function InventoryDistributeDialog({
   const resetForm = () => {
     setProductId("");
     setStoreId("");
-    setQuantityNumber("");
-    setMeasuredQuantity("");
-    setMeasurementUnit("ratti");
+    setWeight("");
+    setStoneCount("");
+    setStoneWeight("");
+    setNotes("");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    toast.info("Distribution UI is ready. API integration will be added later.");
-    setOpen(false);
-    resetForm();
+    allocateMutation.mutate({
+      productId,
+      storeId,
+      weight: Number(weight),
+      stoneCount: stoneCount ? Number(stoneCount) : undefined,
+      stoneWeight: stoneWeight ? Number(stoneWeight) : undefined,
+      notes: notes.trim() || undefined,
+    });
   };
 
   return (
@@ -97,11 +131,16 @@ export default function InventoryDistributeDialog({
               <SelectContent>
                 {productOptions.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name}
+                    {product.name} {typeof product.availableWeight === "number" ? `(${product.availableWeight} wt)` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {productOptions.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No products currently have stock in Central Inventory. Receive stock in central inventory first, then distribute it to stores.
+              </p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
@@ -121,57 +160,58 @@ export default function InventoryDistributeDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Quantity in Number</Label>
+            <Label>Weight</Label>
             <Input
               type="number"
-              step="1"
+              step="0.01"
               min="0"
-              value={quantityNumber}
-              onChange={(event) => setQuantityNumber(event.target.value)}
-              placeholder="Enter quantity in number"
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              placeholder="Enter allocated weight"
             />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>Measurement Unit</Label>
-              <Select
-                value={measurementUnit}
-                onValueChange={(value) =>
-                  setMeasurementUnit(value as InventoryMeasurementUnit)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ratti">Ratti</SelectItem>
-                  <SelectItem value="carat">Carat</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Stone Count</Label>
+              <Input
+                type="number"
+                step="1"
+                min="0"
+                value={stoneCount}
+                onChange={(event) => setStoneCount(event.target.value)}
+                placeholder="Optional stone count"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label>
-                Quantity in {measurementUnit === "ratti" ? "Ratti" : "Carat"}
-              </Label>
+              <Label>Stone Weight</Label>
               <Input
                 type="number"
                 step="0.01"
                 min="0"
-                value={measuredQuantity}
-                onChange={(event) => setMeasuredQuantity(event.target.value)}
-                placeholder={`Enter quantity in ${measurementUnit}`}
+                value={stoneWeight}
+                onChange={(event) => setStoneWeight(event.target.value)}
+                placeholder="Optional stone weight"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Notes</Label>
+            <Input
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Optional notes"
+            />
           </div>
 
           <Button
             type="submit"
             className="w-full"
-            disabled={!productId || !storeId || !quantityNumber || !measuredQuantity}
+            disabled={!productId || !storeId || !weight || allocateMutation.isPending}
           >
-            Save Distribution
+            {allocateMutation.isPending ? "Saving..." : "Save Distribution"}
           </Button>
         </form>
       </DialogContent>

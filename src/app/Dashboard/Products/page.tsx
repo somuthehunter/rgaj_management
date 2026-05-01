@@ -7,6 +7,7 @@ import ProductTable from "./_component/ProductTable";
 import { useProducts } from "./_hooks/useProducts";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
+import { normalizeRole } from "@/lib/auth";
 import ListControlsBar from "@/components/shared/ListControlsBar";
 import { useProductActions } from "./_hooks/useProductActions";
 import { useProductFiltersState } from "./_hooks/useProductFiltersState";
@@ -29,29 +30,29 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 };
 
 export default function ProductsPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
     const user = getUser();
-    const normalizedRole = user?.role?.toUpperCase();
-    setIsAdmin(
-      normalizedRole === UserRole.SUPER_ADMIN || normalizedRole === "ADMIN",
-    );
+    const normalizedRole = normalizeRole(user?.role);
+    setRole(normalizedRole ?? null);
   }, []);
 
   const filters = useProductFiltersState();
-  const { data, isLoading } = useProducts(filters.queryParams);
+  const { data, isLoading, isError, error } = useProducts(filters.queryParams);
   const { selectControls } = useProductFilterControls({
     products: data?.data,
     categoryFilter: filters.categoryFilter,
+    weightUnitFilter: filters.weightUnitFilter,
     statusFilter: filters.statusFilter,
     sortValue: filters.sortValue,
     setCategoryFilter: filters.setCategoryFilter,
+    setWeightUnitFilter: filters.setWeightUnitFilter,
     setStatusFilter: filters.setStatusFilter,
     setSortValue: filters.setSortValue,
   });
 
-  const { handleDeactivate, handleActivate, handleReturn } = useProductActions();
+  const { handleDeactivate, handleActivate } = useProductActions();
 
   const currentPage = data?.page ?? filters.page;
   const totalItems = data?.total ?? 0;
@@ -61,12 +62,15 @@ export default function ProductsPage() {
   const to = Math.min(currentPage * itemsPerPage, totalItems);
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
+  const canEdit = role === UserRole.SUPER_ADMIN || role === UserRole.STORE_ADMIN;
+  const canManageStatus = role === UserRole.SUPER_ADMIN;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between">
         <h1 className="text-2xl font-bold">Products</h1>
         <div className="flex items-center gap-2">
-          <AddProductDialog />
+          {canEdit ? <AddProductDialog /> : null}
         </div>
       </div>
 
@@ -80,14 +84,18 @@ export default function ProductsPage() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load products."}
+        </p>
       ) : (
         <div className="space-y-4">
           <ProductTable
             products={data?.data}
-            isAdmin={isAdmin}
+            canManageStatus={canManageStatus}
+            canEdit={canEdit}
             onDeactivate={handleDeactivate}
             onActivate={handleActivate}
-            onReturn={handleReturn}
           />
           <ProductPagination
             currentPage={currentPage}

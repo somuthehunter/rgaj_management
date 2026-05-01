@@ -7,6 +7,10 @@ export type OrderLineItem = {
   sku: string;
   category: string;
   quantity: number;
+  actualWeight?: number;
+  stoneCount?: number;
+  rfid?: string;
+  isReturned?: boolean;
   unitPrice: number;
   taxRate: number;
   lineSubtotal: number;
@@ -28,16 +32,23 @@ export type OrderListItem = {
   storeName: string;
   customer: OrderCustomer;
   items: OrderLineItem[];
+  itemCount?: number;
   subtotal: number;
   tax: number;
   total: number;
   status: OrderStatus;
-  paymentMethod: "CASH" | "CARD" | "UPI" | "BANK_TRANSFER";
+  paymentMethod: "CASH" | "CARD" | "UPI" | "MIXED" | "BANK_TRANSFER";
   createdAt: string;
   notes?: string;
 };
 
-export type OrderSearchStatus = "pending" | "completed" | "cancelled" | "";
+export type OrderSearchStatus =
+  | "pending"
+  | "completed"
+  | "partially_returned"
+  | "fully_returned"
+  | "cancelled"
+  | "";
 
 export type OrderSearchParams = {
   search?: string;

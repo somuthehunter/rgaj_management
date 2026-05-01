@@ -2,22 +2,38 @@ import { SelectOption } from "@/components/shared/ListControlsBar";
 import { TransactionSearchParams } from "@/types/transaction";
 import { TransactionSortValue } from "../_types/transaction-controls.types";
 
-export const TRANSACTION_EVENT_OPTIONS: SelectOption[] = [
-  { label: "All Events", value: "all" },
-  { label: "Add Product", value: "ADD_PRODUCT" },
-  { label: "Add Category", value: "ADD_CATEGORY" },
-  { label: "Remove Product", value: "REMOVE_PRODUCT" },
+export const TRANSACTION_ACTION_OPTIONS: SelectOption[] = [
+  { label: "All Actions", value: "all" },
+  { label: "Create", value: "CREATE" },
+  { label: "Update", value: "UPDATE" },
+  { label: "Delete", value: "DELETE" },
+  { label: "Activate", value: "ACTIVATE" },
+  { label: "Login", value: "LOGIN" },
+  { label: "Logout", value: "LOGOUT" },
+  { label: "Allocate", value: "ALLOCATE" },
   { label: "Sell", value: "SELL" },
-  { label: "Return", value: "RETURN" },
-  { label: "Create User", value: "CREATE_USER" },
-  { label: "Distribute", value: "DISTRIBUTE" },
+  { label: "Refund", value: "REFUND" },
+  { label: "Cancel", value: "CANCEL" },
+];
+
+export const TRANSACTION_ENTITY_OPTIONS: SelectOption[] = [
+  { label: "All Entities", value: "all" },
+  { label: "Auth", value: "AUTH" },
+  { label: "User", value: "USER" },
+  { label: "Store", value: "STORE" },
+  { label: "Product", value: "PRODUCT" },
+  { label: "Inventory", value: "INVENTORY" },
+  { label: "Invoice", value: "INVOICE" },
+  { label: "Customer", value: "CUSTOMER" },
+  { label: "Refund", value: "REFUND" },
 ];
 
 export const TRANSACTION_SORT_OPTIONS: SelectOption[] = [
   { label: "Newest First", value: "newest" },
   { label: "Oldest First", value: "oldest" },
-  { label: "Event A-Z", value: "event-asc" },
-  { label: "Actor A-Z", value: "actor-asc" },
+  { label: "Action A-Z", value: "action-asc" },
+  { label: "Entity A-Z", value: "entity-asc" },
+  { label: "User A-Z", value: "user-asc" },
 ];
 
 export const TRANSACTION_SORT_MAP: Record<
@@ -26,6 +42,7 @@ export const TRANSACTION_SORT_MAP: Record<
 > = {
   newest: { sortBy: "createdAt", sortOrder: "desc" },
   oldest: { sortBy: "createdAt", sortOrder: "asc" },
-  "event-asc": { sortBy: "eventType", sortOrder: "asc" },
-  "actor-asc": { sortBy: "performedBy", sortOrder: "asc" },
+  "action-asc": { sortBy: "action", sortOrder: "asc" },
+  "entity-asc": { sortBy: "entity", sortOrder: "asc" },
+  "user-asc": { sortBy: "userId", sortOrder: "asc" },
 };

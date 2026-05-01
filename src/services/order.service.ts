@@ -1,244 +1,198 @@
+import { getService, patchService } from "./service";
+import endpoints from "@/constants/query_const";
 import { OrderStatus, PaginatedResponse } from "@/types";
-import { OrderListItem, OrderSearchParams } from "@/types/order";
+import { OrderLineItem, OrderListItem, OrderSearchParams } from "@/types/order";
+import { getUser } from "./session.service";
+import { normalizeRole } from "@/lib/auth";
+import { UserRole } from "@/types";
 
-let mockOrders: OrderListItem[] = [
-  {
-    id: "order-1",
-    orderNumber: "RGAJ-1001",
-    storeId: "store-1",
-    storeName: "Main Showroom",
-    customer: {
-      name: "Arpita Sen",
-      phone: "+91 9876543210",
-      email: "arpita.sen@example.com",
-      address: "12 Park Street, Kolkata",
-    },
-    items: [
-      {
-        id: "order-1-item-1",
-        productId: "prod-1",
-        productName: "Diamond Earrings 28K",
-        sku: "EARR-28K-71534",
-        category: "Diamond Collection",
-        quantity: 1,
-        unitPrice: 18500,
-        taxRate: 3,
-        lineSubtotal: 18500,
-        lineTax: 555,
-        lineTotal: 19055,
-      },
-      {
-        id: "order-1-item-2",
-        productId: "prod-2",
-        productName: "Silver Anklet Premium",
-        sku: "SIL-ANK-004",
-        category: "Silver Jewellery",
-        quantity: 1,
-        unitPrice: 4200,
-        taxRate: 3,
-        lineSubtotal: 4200,
-        lineTax: 126,
-        lineTotal: 4326,
-      },
-    ],
-    subtotal: 22700,
-    tax: 681,
-    total: 23381,
-    status: OrderStatus.COMPLETED,
-    paymentMethod: "UPI",
-    createdAt: "2026-03-19T11:10:00.000Z",
-    notes: "Gift packaging requested.",
-  },
-  {
-    id: "order-2",
-    orderNumber: "RGAJ-1002",
-    storeId: "store-2",
-    storeName: "City Branch",
-    customer: {
-      name: "Rohit Dutta",
-      phone: "+91 9811122233",
-      email: "rohit.dutta@example.com",
-      address: "45 Benachity, Durgapur",
-    },
-    items: [
-      {
-        id: "order-2-item-1",
-        productId: "prod-3",
-        productName: "Gold Necklace 22K Traditional",
-        sku: "NECK-22K-001",
-        category: "Gold Jewellery",
-        quantity: 1,
-        unitPrice: 38500,
-        taxRate: 3,
-        lineSubtotal: 38500,
-        lineTax: 1155,
-        lineTotal: 39655,
-      },
-    ],
-    subtotal: 38500,
-    tax: 1155,
-    total: 39655,
-    status: OrderStatus.PENDING,
-    paymentMethod: "CARD",
-    createdAt: "2026-03-20T15:45:00.000Z",
-    notes: "Waiting for final payment confirmation.",
-  },
-  {
-    id: "order-3",
-    orderNumber: "RGAJ-1003",
-    storeId: "store-3",
-    storeName: "Mall Branch",
-    customer: {
-      name: "Sneha Paul",
-      phone: "+91 9900011122",
-      email: "sneha.paul@example.com",
-      address: "City Centre Mall Road, Siliguri",
-    },
-    items: [
-      {
-        id: "order-3-item-1",
-        productId: "prod-4",
-        productName: "Wedding Choker Set",
-        sku: "WED-CHK-008",
-        category: "Wedding Specials",
-        quantity: 1,
-        unitPrice: 54200,
-        taxRate: 3,
-        lineSubtotal: 54200,
-        lineTax: 1626,
-        lineTotal: 55826,
-      },
-      {
-        id: "order-3-item-2",
-        productId: "prod-5",
-        productName: "Kids Bracelet",
-        sku: "KID-BRC-002",
-        category: "Kids Collection",
-        quantity: 2,
-        unitPrice: 3200,
-        taxRate: 3,
-        lineSubtotal: 6400,
-        lineTax: 192,
-        lineTotal: 6592,
-      },
-    ],
-    subtotal: 60600,
-    tax: 1818,
-    total: 62418,
-    status: OrderStatus.COMPLETED,
-    paymentMethod: "BANK_TRANSFER",
-    createdAt: "2026-03-18T13:30:00.000Z",
-  },
-  {
-    id: "order-4",
-    orderNumber: "RGAJ-1004",
-    storeId: "store-1",
-    storeName: "Main Showroom",
-    customer: {
-      name: "Vikram Shah",
-      phone: "+91 9830011223",
-      email: "vikram.shah@example.com",
-      address: "Salt Lake Sector V, Kolkata",
-    },
-    items: [
-      {
-        id: "order-4-item-1",
-        productId: "prod-6",
-        productName: "Gold Bangles 22K Pair",
-        sku: "BANG-22K-001",
-        category: "Gold Jewellery",
-        quantity: 1,
-        unitPrice: 47200,
-        taxRate: 3,
-        lineSubtotal: 47200,
-        lineTax: 1416,
-        lineTotal: 48616,
-      },
-    ],
-    subtotal: 47200,
-    tax: 1416,
-    total: 48616,
-    status: OrderStatus.CANCELLED,
-    paymentMethod: "CASH",
-    createdAt: "2026-03-17T10:05:00.000Z",
-    notes: "Order cancelled by customer before dispatch.",
-  },
-  {
-    id: "order-5",
-    orderNumber: "RGAJ-1005",
-    storeId: "store-2",
-    storeName: "City Branch",
-    customer: {
-      name: "Mousumi Ghosh",
-      phone: "+91 9870001234",
-      email: "mousumi.ghosh@example.com",
-      address: "Muchipara, Durgapur",
-    },
-    items: [
-      {
-        id: "order-5-item-1",
-        productId: "prod-7",
-        productName: "Temple Design Pendant",
-        sku: "TEMP-PEND-014",
-        category: "Temple Design",
-        quantity: 1,
-        unitPrice: 16800,
-        taxRate: 3,
-        lineSubtotal: 16800,
-        lineTax: 504,
-        lineTotal: 17304,
-      },
-      {
-        id: "order-5-item-2",
-        productId: "prod-8",
-        productName: "Diamond Nose Pin",
-        sku: "DIA-NOSE-301",
-        category: "Diamond Collection",
-        quantity: 1,
-        unitPrice: 9500,
-        taxRate: 3,
-        lineSubtotal: 9500,
-        lineTax: 285,
-        lineTotal: 9785,
-      },
-      {
-        id: "order-5-item-3",
-        productId: "prod-9",
-        productName: "Silver Toe Ring Pair",
-        sku: "SIL-TOE-019",
-        category: "Silver Jewellery",
-        quantity: 2,
-        unitPrice: 1200,
-        taxRate: 3,
-        lineSubtotal: 2400,
-        lineTax: 72,
-        lineTotal: 2472,
-      },
-    ],
-    subtotal: 28700,
-    tax: 861,
-    total: 29561,
-    status: OrderStatus.COMPLETED,
-    paymentMethod: "CARD",
-    createdAt: "2026-03-21T17:15:00.000Z",
-  },
-];
+type InvoiceListApiItem = {
+  id: string;
+  invoiceNumber?: string;
+  storeId?: string;
+  customerId?: string | null;
+  subtotal?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  paymentMethod?: string;
+  status?: string;
+  cashierId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  customer?: {
+    id?: string;
+    name?: string;
+    phone?: string;
+    email?: string | null;
+  } | null;
+  store?: {
+    id?: string;
+    name?: string;
+    code?: string;
+  } | null;
+  _count?: {
+    items?: number;
+    refunds?: number;
+  };
+};
 
-const delay = async () =>
-  new Promise((resolve) => window.setTimeout(resolve, 120));
+type InvoiceDetailApiItem = {
+  id: string;
+  invoiceId?: string;
+  productId?: string;
+  productName?: string;
+  sku?: string;
+  hsnCode?: string;
+  weight?: number;
+  stoneCount?: number;
+  pricePerUnit?: number;
+  gstRate?: number;
+  gstAmount?: number;
+  totalAmount?: number;
+  rfid?: string;
+  isReturned?: boolean;
+};
+
+type InvoiceDetailApiResponse = {
+  success: boolean;
+  data?: InvoiceListApiItem & {
+    items?: InvoiceDetailApiItem[];
+    customer?: {
+      id?: string;
+      name?: string;
+      phone?: string;
+      email?: string | null;
+      address?: string | null;
+    } | null;
+  };
+  message?: string;
+};
+
+type InvoiceListResponse = {
+  success: boolean;
+  data?: InvoiceListApiItem[];
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  message?: string;
+};
+
+const normalizeOrderStatus = (status?: string): OrderStatus => {
+  if (status === "CANCELLED") return OrderStatus.CANCELLED;
+  if (status === "DRAFT") return OrderStatus.PENDING;
+  if (status === "PARTIALLY_RETURNED") return OrderStatus.PARTIALLY_RETURNED;
+  if (status === "FULLY_RETURNED") return OrderStatus.FULLY_RETURNED;
+  return OrderStatus.COMPLETED;
+};
+
+const normalizeLineItem = (item: InvoiceDetailApiItem): OrderLineItem => {
+  const lineSubtotal = (item.totalAmount ?? 0) - (item.gstAmount ?? 0);
+
+  return {
+    id: item.id,
+    productId: item.productId ?? "",
+    productName: item.productName ?? "Unnamed Product",
+    sku: item.sku ?? "N/A",
+    category: item.hsnCode ?? "Jewellery",
+    quantity: 1,
+    actualWeight: item.weight ?? 0,
+    stoneCount: item.stoneCount ?? 0,
+    rfid: item.rfid ?? "",
+    isReturned: item.isReturned ?? false,
+    unitPrice: item.pricePerUnit ?? 0,
+    taxRate: item.gstRate ?? 0,
+    lineSubtotal,
+    lineTax: item.gstAmount ?? 0,
+    lineTotal: item.totalAmount ?? 0,
+  };
+};
+
+const normalizeOrder = (invoice: InvoiceListApiItem): OrderListItem => ({
+  id: invoice.id,
+  orderNumber: invoice.invoiceNumber ?? invoice.id,
+  storeId: invoice.storeId ?? invoice.store?.id ?? "",
+  storeName: invoice.store?.name ?? "Store",
+  customer: {
+    name: invoice.customer?.name ?? "Walk-in Customer",
+    phone: invoice.customer?.phone ?? "Not provided",
+    email: invoice.customer?.email ?? undefined,
+  },
+  items: [],
+  itemCount: invoice._count?.items ?? 0,
+  subtotal: invoice.subtotal ?? 0,
+  tax: invoice.gstAmount ?? 0,
+  total: invoice.totalAmount ?? 0,
+  status: normalizeOrderStatus(invoice.status),
+  paymentMethod:
+    invoice.paymentMethod === "MIXED" ||
+    invoice.paymentMethod === "CARD" ||
+    invoice.paymentMethod === "UPI" ||
+    invoice.paymentMethod === "CASH"
+      ? invoice.paymentMethod
+      : "CASH",
+  createdAt: invoice.createdAt ?? new Date().toISOString(),
+});
+
+const normalizeOrderDetail = (
+  invoice: NonNullable<InvoiceDetailApiResponse["data"]>,
+): OrderListItem => ({
+  ...normalizeOrder(invoice),
+  customer: {
+    name: invoice.customer?.name ?? "Walk-in Customer",
+    phone: invoice.customer?.phone ?? "Not provided",
+    email: invoice.customer?.email ?? undefined,
+    address: invoice.customer?.address ?? undefined,
+  },
+  items: (invoice.items ?? []).map(normalizeLineItem),
+  itemCount: invoice.items?.length ?? invoice._count?.items ?? 0,
+});
+
+const buildInvoicesQuery = (params?: OrderSearchParams) => {
+  const query = new URLSearchParams();
+  const user = getUser();
+  const role = normalizeRole(user?.role);
+  const effectiveStoreId =
+    role === UserRole.SUPER_ADMIN ? params?.storeId : user?.storeId ?? params?.storeId;
+
+  query.set("page", String(params?.page ?? 1));
+  query.set("limit", String(params?.limit ?? 10));
+
+  if (effectiveStoreId) {
+    query.set("storeId", effectiveStoreId);
+  }
+
+  if (params?.status) {
+    const backendStatus =
+      params.status === "pending"
+        ? "DRAFT"
+        : params.status === "cancelled"
+          ? "CANCELLED"
+          : params.status === "partially_returned"
+            ? "PARTIALLY_RETURNED"
+            : params.status === "fully_returned"
+              ? "FULLY_RETURNED"
+              : "COMPLETED";
+    query.set("status", backendStatus);
+  }
+
+  return query.toString();
+};
 
 const sortOrders = (
-  orders: OrderListItem[],
+  rows: OrderListItem[],
   sortBy?: string,
   sortOrder?: "asc" | "desc" | "",
 ) => {
   if (!sortBy || !sortOrder) {
-    return [...orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   }
 
   const multiplier = sortOrder === "asc" ? 1 : -1;
 
-  return [...orders].sort((a, b) => {
+  return [...rows].sort((a, b) => {
     if (sortBy === "total") {
       return (a.total - b.total) * multiplier;
     }
@@ -247,78 +201,100 @@ const sortOrders = (
       return a.storeName.localeCompare(b.storeName) * multiplier;
     }
 
-    if (sortBy === "status") {
-      return a.status.localeCompare(b.status) * multiplier;
-    }
-
     return a.createdAt.localeCompare(b.createdAt) * multiplier;
   });
 };
 
-const buildPaginatedResponse = (
-  rows: OrderListItem[],
-  page = 1,
-  limit = 10,
-): PaginatedResponse<OrderListItem> => {
-  const total = rows.length;
-  const safePage = Math.max(1, page);
-  const safeLimit = Math.max(1, limit);
-  const startIndex = (safePage - 1) * safeLimit;
-
-  return {
-    success: true,
-    data: rows.slice(startIndex, startIndex + safeLimit),
-    total,
-    page: safePage,
-    limit: safeLimit,
-  };
-};
-
-const filterOrders = (params?: OrderSearchParams) => {
+const filterOrders = (rows: OrderListItem[], params?: OrderSearchParams) => {
   const search = params?.search?.trim().toLowerCase() ?? "";
 
-  const filtered = mockOrders.filter((order) => {
-    const matchesSearch = !search
-      ? true
-      : order.orderNumber.toLowerCase().includes(search) ||
-        order.storeName.toLowerCase().includes(search) ||
-        order.customer.name.toLowerCase().includes(search) ||
-        order.customer.phone.toLowerCase().includes(search);
+  return rows.filter((order) => {
+    if (!search) return true;
 
-    const matchesStore = params?.storeId ? order.storeId === params.storeId : true;
-    const matchesStatus = params?.status
-      ? order.status.toLowerCase() === params.status
-      : true;
-
-    return matchesSearch && matchesStore && matchesStatus;
+    return (
+      order.orderNumber.toLowerCase().includes(search) ||
+      order.storeName.toLowerCase().includes(search) ||
+      order.customer.name.toLowerCase().includes(search) ||
+      order.customer.phone.toLowerCase().includes(search)
+    );
   });
-
-  return sortOrders(filtered, params?.sortBy, params?.sortOrder);
 };
 
 export const orderService = {
-  // Replace this mock implementation with real order API calls when billing/order endpoints are ready.
   getAll: async (params?: OrderSearchParams) => {
-    await delay();
-    const rows = filterOrders(params);
-    return buildPaginatedResponse(rows, params?.page, params?.limit);
+    const query = buildInvoicesQuery(params);
+    const res = (await getService(
+      `${endpoints.billing.invoices}?${query}`,
+    )) as InvoiceListResponse;
+
+    const rows = sortOrders(
+      filterOrders((res.data ?? []).map(normalizeOrder), params),
+      params?.sortBy,
+      params?.sortOrder,
+    );
+
+    return {
+      success: res.success,
+      data: rows,
+      total: res.pagination?.total ?? rows.length,
+      page: res.pagination?.page ?? params?.page ?? 1,
+      limit: res.pagination?.limit ?? params?.limit ?? 10,
+      message: res.message,
+    } satisfies PaginatedResponse<OrderListItem>;
   },
 
   search: async (params: OrderSearchParams) => {
-    await delay();
-    const rows = filterOrders(params);
-    return buildPaginatedResponse(rows, params.page, params.limit);
+    const query = buildInvoicesQuery({
+      ...params,
+      page: 1,
+      limit: 100,
+    });
+    const res = (await getService(
+      `${endpoints.billing.invoices}?${query}`,
+    )) as InvoiceListResponse;
+
+    const filtered = sortOrders(
+      filterOrders((res.data ?? []).map(normalizeOrder), params),
+      params.sortBy,
+      params.sortOrder,
+    );
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 10;
+    const startIndex = (page - 1) * limit;
+
+    return {
+      success: res.success,
+      data: filtered.slice(startIndex, startIndex + limit),
+      total: filtered.length,
+      page,
+      limit,
+      message: res.message,
+    } satisfies PaginatedResponse<OrderListItem>;
   },
-};
 
-export const getMockOrdersSnapshot = () =>
-  mockOrders.map((order) => ({
-    ...order,
-    customer: { ...order.customer },
-    items: order.items.map((item) => ({ ...item })),
-  }));
+  getById: async (id: string) => {
+    const res = (await getService(endpoints.billing.invoiceById(id))) as InvoiceDetailApiResponse;
 
-export const addMockOrder = (order: OrderListItem) => {
-  mockOrders = [order, ...mockOrders];
-  return order;
+    if (!res.data) {
+      throw new Error("Order details not found.");
+    }
+
+    return {
+      ...res,
+      data: normalizeOrderDetail(res.data),
+    };
+  },
+
+  cancel: async (id: string) => {
+    const res = (await patchService(endpoints.billing.cancelInvoice(id), {})) as InvoiceDetailApiResponse;
+
+    if (!res.data) {
+      return res;
+    }
+
+    return {
+      ...res,
+      data: normalizeOrderDetail(res.data),
+    };
+  },
 };

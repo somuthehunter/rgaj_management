@@ -22,6 +22,7 @@ type InventoryPaginationProps = {
   onPageChange: (page: number) => void;
   onPrevious: () => void;
   onNext: () => void;
+  label?: string;
 };
 
 export default function InventoryPagination({
@@ -35,13 +36,14 @@ export default function InventoryPagination({
   onPageChange,
   onPrevious,
   onNext,
+  label = "inventory records",
 }: InventoryPaginationProps) {
   if (totalItems === 0) return null;
 
   return (
     <div className="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-sm text-muted-foreground">
-        Showing {from}-{to} of {totalItems} inventory records
+        Showing {from}-{to} of {totalItems} {label}
       </p>
 
       <Pagination className="mx-0 w-auto justify-start sm:justify-end">

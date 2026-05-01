@@ -9,8 +9,8 @@ import TransactionDetailsDialog from "./TransactionDetailsDialog";
 import {
   downloadTransactionSummary,
   formatTransactionDate,
-  formatTransactionEventLabel,
-  getTransactionEventClasses,
+  formatTransactionLabel,
+  getTransactionActionClasses,
 } from "../_utils/transaction.utils";
 
 export default function TransactionTable({
@@ -18,43 +18,36 @@ export default function TransactionTable({
 }: TransactionTableProps) {
   const columns: DataTableColumn<TransactionRow>[] = [
     {
-      id: "event",
-      header: "Event",
+      id: "action",
+      header: "Action",
       cell: (transaction) => (
         <div>
-          <p className="font-medium">{transaction.title}</p>
-          <p className="text-xs text-muted-foreground">
-            {transaction.entityName || transaction.module}
+          <Badge
+            variant="outline"
+            className={getTransactionActionClasses(transaction.action)}
+          >
+            {formatTransactionLabel(transaction.action)}
+          </Badge>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatTransactionLabel(transaction.entity)}
           </p>
         </div>
       ),
     },
     {
-      id: "type",
-      header: "Type",
-      cell: (transaction) => (
-        <Badge
-          variant="outline"
-          className={getTransactionEventClasses(transaction.eventType)}
-        >
-          {formatTransactionEventLabel(transaction.eventType)}
-        </Badge>
-      ),
+      id: "entity-id",
+      header: "Entity ID",
+      cell: (transaction) => transaction.entityId || "N/A",
     },
     {
-      id: "actor",
-      header: "Actor",
-      cell: (transaction) => (
-        <div>
-          <p>{transaction.performedBy}</p>
-          <p className="text-xs text-muted-foreground">{transaction.role}</p>
-        </div>
-      ),
+      id: "user-id",
+      header: "User ID",
+      cell: (transaction) => transaction.userId,
     },
     {
-      id: "store",
-      header: "Store",
-      cell: (transaction) => transaction.storeName || "System",
+      id: "ip",
+      header: "IP Address",
+      cell: (transaction) => transaction.ipAddress || "N/A",
     },
     {
       id: "date",
@@ -81,12 +74,12 @@ export default function TransactionTable({
 
   return (
     <div className="w-full overflow-x-auto">
-      <div className="min-w-[920px]">
+      <div className="min-w-[980px]">
         <DataTable
           data={transactions}
           columns={columns}
           getRowKey={(transaction) => transaction.id}
-          emptyMessage="No activity logs found."
+          emptyMessage="No audit logs found."
         />
       </div>
     </div>

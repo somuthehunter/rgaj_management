@@ -33,9 +33,9 @@ export default function StoreTable({
       cell: (store) => `${store.city}, ${store.state}`,
     },
     {
-      id: "manager",
-      header: "Manager",
-      cell: (store) => store.managerName,
+      id: "phone",
+      header: "Phone",
+      cell: (store) => store.phone || "-",
     },
     {
       id: "users",

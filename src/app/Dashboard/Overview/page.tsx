@@ -34,20 +34,27 @@ import {
 } from "recharts";
 import type { User } from "@/types";
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 2,
+  }).format(value);
+
 const StatCard: React.FC<{
   title: string;
   value: string | number;
   change?: number;
   icon: React.FC<{ className?: string }>;
 }> = ({ title, value, change, icon: Icon }) => (
-  <Card className="hover:border-primary/30 transition-colors">
+  <Card className="transition-colors hover:border-primary/30">
     <CardContent className="p-5">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
+          <p className="mt-1 text-2xl font-bold">{value}</p>
           {change !== undefined && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="mt-2 flex items-center gap-1">
               {change >= 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-500" />
               ) : (
@@ -61,13 +68,11 @@ const StatCard: React.FC<{
                 {change >= 0 ? "+" : ""}
                 {change}%
               </span>
-              <span className="text-xs text-muted-foreground">
-                vs last month
-              </span>
+              <span className="text-xs text-muted-foreground">vs last month</span>
             </div>
           )}
         </div>
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
           <Icon className="h-5 w-5 text-primary" />
         </div>
       </div>
@@ -82,13 +87,13 @@ const QuickLink: React.FC<{
 }> = ({ href, label, description }) => (
   <Link
     href={href}
-    className="flex items-center justify-between p-4 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors group"
+    className="group flex items-center justify-between rounded-lg bg-secondary/50 p-4 transition-colors hover:bg-secondary"
   >
     <div>
       <p className="text-sm font-medium">{label}</p>
       <p className="text-xs text-muted-foreground">{description}</p>
     </div>
-    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    <ArrowRight className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
   </Link>
 );
 
@@ -107,7 +112,7 @@ export default function OverviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <div className="text-muted-foreground text-sm mt-1 flex items-center gap-1">
+        <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
           <span>Welcome back, {user?.name}.</span>
           <Badge variant="outline" className="text-xs">
             {user?.role}
@@ -115,8 +120,7 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
@@ -127,16 +131,8 @@ export default function OverviewPage() {
           ))
         ) : stats ? (
           <>
-            <StatCard
-              title="Total Stores"
-              value={stats.totalStores}
-              icon={Store}
-            />
-            <StatCard
-              title="Total Products"
-              value={stats.totalProducts}
-              icon={Package}
-            />
+            <StatCard title="Total Stores" value={stats.totalStores} icon={Store} />
+            <StatCard title="Total Products" value={stats.totalProducts} icon={Package} />
             <StatCard
               title="Total Orders"
               value={stats.totalOrders}
@@ -144,8 +140,8 @@ export default function OverviewPage() {
               icon={ShoppingCart}
             />
             <StatCard
-              title="Revenue"
-              value={`₹${stats.totalRevenue.toLocaleString()}`}
+              title="Net Revenue"
+              value={formatCurrency(stats.totalRevenue)}
               change={stats.revenueChange}
               icon={DollarSign}
             />
@@ -153,8 +149,7 @@ export default function OverviewPage() {
         ) : null}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -169,7 +164,7 @@ export default function OverviewPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" fontSize={12} />
                     <YAxis fontSize={12} />
-                    <Tooltip />
+                    <Tooltip formatter={(value?: number) => formatCurrency(value ?? 0)} />
                     <Area
                       type="monotone"
                       dataKey="value"
@@ -187,7 +182,7 @@ export default function OverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Store Performance
+              Store Performance (Net Sales)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,7 +193,7 @@ export default function OverviewPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" fontSize={11} />
                     <YAxis fontSize={12} />
-                    <Tooltip />
+                    <Tooltip formatter={(value?: number) => formatCurrency(value ?? 0)} />
                     <Bar
                       dataKey="value"
                       fill="hsl(var(--primary))"
@@ -212,14 +207,13 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      {/* Quick Links */}
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-medium text-muted-foreground">
             Quick Actions
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {user?.role === UserRole.SUPER_ADMIN && (
             <QuickLink
               href="/Dashboard/Stores"
@@ -247,5 +241,3 @@ export default function OverviewPage() {
     </div>
   );
 }
-
-

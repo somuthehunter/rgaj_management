@@ -15,9 +15,11 @@ import {
 type Params = {
   products?: ProductListItem[];
   categoryFilter: string;
+  weightUnitFilter: "" | "RATI" | "CARAT";
   statusFilter: ProductStatusValue;
   sortValue: ProductSortValue;
   setCategoryFilter: (value: string) => void;
+  setWeightUnitFilter: (value: "" | "RATI" | "CARAT") => void;
   setStatusFilter: (value: ProductStatusValue) => void;
   setSortValue: (value: ProductSortValue) => void;
 };
@@ -25,29 +27,43 @@ type Params = {
 export const useProductFilterControls = ({
   products,
   categoryFilter,
+  weightUnitFilter,
   statusFilter,
   sortValue,
   setCategoryFilter,
+  setWeightUnitFilter,
   setStatusFilter,
   setSortValue,
 }: Params) => {
   const categoryOptions = useMemo(() => {
     const categories = Array.from(
-      new Set(
+      new Map(
         (products ?? [])
-          .map((product) => product?.category)
-          .filter((item): item is string => Boolean(item)),
+          .filter((product) => product.categoryId)
+          .map((product) => [
+            product.categoryId,
+            product.categoryName,
+          ]),
       ),
-    ).sort((a, b) => a.localeCompare(b));
+    ).sort((a, b) => a[1].localeCompare(b[1]));
 
     return [
       { label: "All Categories", value: "all" },
-      ...categories.map((category) => ({
-        label: category,
-        value: category,
+      ...categories.map(([id, name]) => ({
+        label: name,
+        value: id,
       })),
     ];
   }, [products]);
+
+  const weightUnitOptions = useMemo(
+    () => [
+      { label: "All Units", value: "all" },
+      { label: "RATI", value: "RATI" },
+      { label: "CARAT", value: "CARAT" },
+    ],
+    [],
+  );
 
   const selectControls = useMemo<SelectControl[]>(
     () => [
@@ -57,6 +73,14 @@ export const useProductFilterControls = ({
         value: categoryFilter,
         options: categoryOptions,
         onValueChange: setCategoryFilter,
+      },
+      {
+        id: "product-weight-unit-filter",
+        label: "Unit",
+        value: weightUnitFilter || "all",
+        options: weightUnitOptions,
+        onValueChange: (value) =>
+          setWeightUnitFilter(value === "all" ? "" : (value as "RATI" | "CARAT")),
       },
       {
         id: "product-status-filter",
@@ -78,10 +102,13 @@ export const useProductFilterControls = ({
       categoryFilter,
       categoryOptions,
       setCategoryFilter,
+      setWeightUnitFilter,
       statusFilter,
       setStatusFilter,
       sortValue,
       setSortValue,
+      weightUnitOptions,
+      weightUnitFilter,
     ],
   );
 

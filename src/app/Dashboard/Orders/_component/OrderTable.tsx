@@ -4,27 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import DataTable, { DataTableColumn } from "@/components/shared/DataTable";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { OrderRow, OrderTableProps } from "../_types/order-table.types";
 import OrderDetailsDialog from "./OrderDetailsDialog";
+import { orderService } from "@/services/order.service";
 import {
   buildOrderBillMarkup,
   formatOrderCurrency,
   formatOrderDate,
   getOrderItemsCount,
   getOrderStatusClasses,
+  openPrintMarkup,
 } from "../_utils/order.utils";
 
-const downloadOrderBill = (order: OrderRow) => {
-  const markup = buildOrderBillMarkup(order);
-  const blob = new Blob([markup], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${order.orderNumber.toLowerCase()}-bill.html`;
-  document.body.appendChild(anchor);
-  anchor.click();
-  document.body.removeChild(anchor);
-  URL.revokeObjectURL(url);
+const printOrderBill = async (order: OrderRow) => {
+  const detailedOrder =
+    order.items.length > 0 ? order : (await orderService.getById(order.id)).data;
+  openPrintMarkup(buildOrderBillMarkup(detailedOrder), `${order.orderNumber} Bill`);
 };
 
 export default function OrderTable({ orders }: OrderTableProps) {
@@ -77,7 +73,18 @@ export default function OrderTable({ orders }: OrderTableProps) {
           <Button
             size="icon"
             variant="ghost"
-            onClick={() => downloadOrderBill(order)}
+            onClick={async () => {
+              try {
+                await printOrderBill(order);
+              } catch (error) {
+                toast.error(
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to open bill for printing.",
+                );
+              }
+            }}
+            title="Print bill"
           >
             <Download className="h-4 w-4" />
           </Button>

@@ -43,13 +43,19 @@ export default function BillItemsEditor({
         <div>
           <h3 className="text-sm font-semibold">Bill Items</h3>
           <p className="text-xs text-muted-foreground">
-            Add products, quantity, and generate a customer bill.
+            Add products from store inventory and enter sold weight details.
           </p>
         </div>
         <Button
           type="button"
           variant="outline"
-          onClick={() => itemsFieldArray.append({ productId: "", quantity: 1 })}
+          onClick={() =>
+            itemsFieldArray.append({
+              productId: "",
+              weight: 0,
+              stoneCount: 0,
+            })
+          }
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Item
@@ -61,14 +67,14 @@ export default function BillItemsEditor({
           const selectedProduct = products.find(
             (product) => product.id === watchedItems?.[index]?.productId,
           );
-          const quantity = watchedItems?.[index]?.quantity ?? 0;
-          const totals = getSellLineTotals(selectedProduct, quantity);
+          const weight = watchedItems?.[index]?.weight ?? 0;
+          const totals = getSellLineTotals(selectedProduct, weight);
 
           return (
             <div key={field.id} className="rounded-lg border p-4">
-              <div className="grid gap-4 lg:grid-cols-[2fr_120px_1fr_auto]">
+              <div className="grid gap-4 xl:grid-cols-[2fr_120px_120px_120px_1fr_auto]">
                 <div className="space-y-2">
-                  <Label>Product</Label>
+                  <Label>Product *</Label>
                   <Controller
                     control={control}
                     name={`items.${index}.productId`}
@@ -80,10 +86,10 @@ export default function BillItemsEditor({
                         <SelectTrigger>
                           <SelectValue placeholder="Select a product" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name} ({product.sku})
+                      <SelectContent>
+                        {products.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.name} ({product.sku})
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -95,28 +101,45 @@ export default function BillItemsEditor({
                   </p>
                   {selectedProduct && (
                     <p className="text-xs text-muted-foreground">
-                      {selectedProduct.category} | Available: {selectedProduct.availableQuantity}
+                      {selectedProduct.weightUnit} | Available:{" "}
+                      {selectedProduct.availableWeight.toFixed(3)}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Qty</Label>
+                  <Label>Weight *</Label>
                   <Input
                     type="number"
-                    min="1"
-                    {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                    min="0.001"
+                    step="0.001"
+                    placeholder="Enter sold weight"
+                    {...register(`items.${index}.weight`, { valueAsNumber: true })}
                   />
                   <p className="text-sm text-destructive">
-                    {errors.items?.[index]?.quantity?.message}
+                    {errors.items?.[index]?.weight?.message}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Stone Cnt.</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Stone count"
+                    {...register(`items.${index}.stoneCount`, { valueAsNumber: true })}
+                  />
+                  <p className="text-sm text-destructive">
+                    {errors.items?.[index]?.stoneCount?.message}
                   </p>
                 </div>
 
                 <div className="space-y-1 rounded-md bg-muted/40 p-3">
-                  <p className="text-xs text-muted-foreground">Line Total</p>
+                  <p className="text-xs text-muted-foreground">Estimated Total</p>
                   <p className="text-sm font-medium">{formatOrderCurrency(totals.total)}</p>
                   <p className="text-xs text-muted-foreground">
-                    Base {formatOrderCurrency(totals.subtotal)} + Tax {formatOrderCurrency(totals.tax)}
+                    Rate/unit {formatOrderCurrency(selectedProduct?.pricePerUnit ?? 0)}
                   </p>
                 </div>
 

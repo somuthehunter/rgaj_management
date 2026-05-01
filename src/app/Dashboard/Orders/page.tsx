@@ -25,7 +25,7 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 
 export default function OrdersPage() {
   const filters = useOrderFiltersState();
-  const { data, isLoading } = useOrders(filters.queryParams);
+  const { data, isLoading, isError, error } = useOrders(filters.queryParams);
   const { selectControls } = useOrderFilterControls({
     orders: data?.data,
     storeFilter: filters.storeFilter,
@@ -65,6 +65,10 @@ export default function OrdersPage() {
 
       {isLoading ? (
         <p>Loading...</p>
+      ) : isError ? (
+        <p className="text-sm text-destructive">
+          {error instanceof Error ? error.message : "Failed to load orders."}
+        </p>
       ) : (
         <div className="space-y-4">
           <OrderTable orders={data?.data} />

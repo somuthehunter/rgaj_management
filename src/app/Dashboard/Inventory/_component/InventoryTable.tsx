@@ -31,14 +31,24 @@ export default function InventoryTable({ inventory }: InventoryTableProps) {
       cell: (row) => <Badge variant="outline">{row.category}</Badge>,
     },
     {
-      id: "quantity-number",
-      header: "Qty Number",
+      id: "stones",
+      header: "Stones",
       cell: (row) => row.quantityNumber,
     },
     {
-      id: "measured-quantity",
-      header: "Measured Qty",
-      cell: (row) => `${row.measuredQuantity} ${row.measuredUnit}`,
+      id: "available",
+      header: "Available",
+      cell: (row) => `${row.measuredQuantity.toFixed(3)} g`,
+    },
+    {
+      id: "sold",
+      header: "Sold",
+      cell: (row) => `${(row.soldWeight ?? 0).toFixed(3)} g`,
+    },
+    {
+      id: "returned",
+      header: "Returned",
+      cell: (row) => `${(row.returnedWeight ?? 0).toFixed(3)} g`,
     },
   ];
 

@@ -1,56 +1,57 @@
+import {
+  deleteService,
+  getService,
+  patchService,
+  postService,
+} from "./service";
 import { UserRole, PaginatedResponse } from "@/types";
 import { UserFormValues } from "@/schemas/user.schema";
 import { UserListItem, UserSearchParams } from "@/types/user";
-import { storeService } from "@/services/store.service";
+import endpoints from "@/constants/query_const";
 
-let mockUsers: UserListItem[] = [
-  {
-    id: "user-1",
-    name: "Sourav Admin",
-    email: "sourav.admin@example.com",
-    phone: "+91 9876500001",
-    role: UserRole.SUPER_ADMIN,
-    storeName: "Main Showroom",
-    isActive: true,
-    createdAt: "2026-03-02T09:00:00.000Z",
-    lastLoginAt: "2026-03-22T08:30:00.000Z",
-  },
-  {
-    id: "user-2",
-    name: "Priya Manager",
-    email: "priya.manager@example.com",
-    phone: "+91 9876500002",
-    role: UserRole.STORE_ADMIN,
-    storeId: "store-2",
-    storeName: "City Branch",
-    isActive: true,
-    createdAt: "2026-03-04T11:00:00.000Z",
-    lastLoginAt: "2026-03-21T17:45:00.000Z",
-  },
-  {
-    id: "user-3",
-    name: "Rohan Sen",
-    email: "rohan.sen@example.com",
-    phone: "+91 9876500003",
-    role: UserRole.STORE_ADMIN,
-    storeId: "store-3",
-    storeName: "Mall Branch",
-    isActive: false,
-    createdAt: "2026-03-05T15:00:00.000Z",
-    lastLoginAt: "2026-03-18T09:10:00.000Z",
-    deactivatedAt: "2026-03-20T11:00:00.000Z",
-  },
-];
-
-const delay = async () =>
-  new Promise((resolve) => window.setTimeout(resolve, 120));
-
-const normalizeActive = (item: UserListItem) => {
-  if (typeof item.isActive === "boolean") return item.isActive;
-  if (typeof item.status === "string") return item.status.toUpperCase() === "ACTIVE";
-  if (item.deactivatedAt) return false;
-  return true;
+type UserApiItem = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: UserRole;
+  storeId?: string | null;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  store?: {
+    id: string;
+    name: string;
+  } | null;
 };
+
+type UserListResponse = {
+  success: boolean;
+  data?: UserApiItem[];
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+  };
+  message?: string;
+};
+
+const USER_BATCH_LIMIT = 100;
+
+const normalizeUser = (user: UserApiItem): UserListItem => ({
+  id: user.id,
+  email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  name: [user.firstName, user.lastName].filter(Boolean).join(" ").trim(),
+  role: user.role,
+  storeId: user.storeId ?? null,
+  storeName: user.store?.name,
+  isActive: typeof user.isActive === "boolean" ? user.isActive : true,
+  createdAt: user.createdAt,
+  updatedAt: user.updatedAt,
+});
 
 const sortUsers = (
   rows: UserListItem[],
@@ -58,9 +59,7 @@ const sortUsers = (
   sortOrder?: "asc" | "desc" | "",
 ) => {
   if (!sortBy || !sortOrder) {
-    return [...rows].sort((a, b) =>
-      (b.createdAt ?? "").localeCompare(a.createdAt ?? ""),
-    );
+    return [...rows];
   }
 
   const multiplier = sortOrder === "asc" ? 1 : -1;
@@ -86,133 +85,166 @@ const buildPaginatedResponse = (
   rows: UserListItem[],
   page = 1,
   limit = 10,
-): PaginatedResponse<UserListItem> => {
-  const total = rows.length;
-  const safePage = Math.max(1, page);
-  const safeLimit = Math.max(1, limit);
-  const startIndex = (safePage - 1) * safeLimit;
+  total = rows.length,
+): PaginatedResponse<UserListItem> => ({
+  success: true,
+  data: rows,
+  total,
+  page,
+  limit,
+});
 
-  return {
-    success: true,
-    data: rows.slice(startIndex, startIndex + safeLimit),
-    total,
-    page: safePage,
-    limit: safeLimit,
-  };
+const buildUsersQuery = (params?: UserSearchParams, overrideLimit?: number) => {
+  const query = new URLSearchParams();
+
+  query.set("page", String(overrideLimit ? 1 : params?.page ?? 1));
+  query.set("limit", String(overrideLimit ?? params?.limit ?? 10));
+
+  if (params?.role) {
+    query.set("role", params.role);
+  }
+
+  if (params?.storeId) {
+    query.set("storeId", params.storeId);
+  }
+
+  if (typeof params?.isActive === "boolean") {
+    query.set("isActive", String(params.isActive));
+  }
+
+  return query.toString();
 };
 
-const filterUsers = (params?: UserSearchParams) => {
+const filterUsers = (rows: UserListItem[], params?: UserSearchParams) => {
   const search = params?.search?.trim().toLowerCase() ?? "";
 
-  const filtered = mockUsers.filter((item) => {
-    const matchesSearch = !search
-      ? true
-      : item.name.toLowerCase().includes(search) ||
-        item.email.toLowerCase().includes(search) ||
-        item.phone.toLowerCase().includes(search);
+  return rows.filter((item) => {
+    if (!search) return true;
 
-    const matchesStore = params?.storeId ? item.storeId === params.storeId : true;
-    const matchesRole = params?.role ? item.role === params.role : true;
-    const matchesStatus =
-      typeof params?.isActive === "boolean"
-        ? normalizeActive(item) === params.isActive
-        : true;
-
-    return matchesSearch && matchesStore && matchesRole && matchesStatus;
+    return (
+      item.name.toLowerCase().includes(search) ||
+      item.email.toLowerCase().includes(search) ||
+      (item.storeName ?? "").toLowerCase().includes(search)
+    );
   });
-
-  return sortUsers(filtered, params?.sortBy, params?.sortOrder);
 };
 
 export const userService = {
-  // Replace this mock implementation with real user API calls when the backend is ready.
   getAll: async (params?: UserSearchParams) => {
-    await delay();
-    const rows = filterUsers(params);
-    return buildPaginatedResponse(rows, params?.page, params?.limit);
+    const query = buildUsersQuery(params);
+    const res = (await getService(
+      `${endpoints.users.getAll}?${query}`,
+    )) as UserListResponse;
+
+    const rows = sortUsers(
+      (res.data ?? []).map(normalizeUser),
+      params?.sortBy,
+      params?.sortOrder,
+    );
+
+    return buildPaginatedResponse(
+      rows,
+      res.pagination?.page ?? params?.page ?? 1,
+      res.pagination?.limit ?? params?.limit ?? 10,
+      res.pagination?.total ?? rows.length,
+    );
   },
 
   search: async (params: UserSearchParams) => {
-    await delay();
-    const rows = filterUsers(params);
-    return buildPaginatedResponse(rows, params.page, params.limit);
+    const query = buildUsersQuery(params, USER_BATCH_LIMIT);
+    const res = (await getService(
+      `${endpoints.users.getAll}?${query}`,
+    )) as UserListResponse;
+
+    const rows = (res.data ?? []).map(normalizeUser);
+    const filtered = sortUsers(filterUsers(rows, params), params.sortBy, params.sortOrder);
+    const page = params.page ?? 1;
+    const limit = params.limit ?? 10;
+    const startIndex = (page - 1) * limit;
+
+    return buildPaginatedResponse(
+      filtered.slice(startIndex, startIndex + limit),
+      page,
+      limit,
+      filtered.length,
+    );
+  },
+
+  getById: async (id: string) => {
+    const res = (await getService(endpoints.users.getById(id))) as {
+      success: boolean;
+      data?: UserApiItem;
+      message?: string;
+    };
+
+    if (!res.data) {
+      throw new Error("User details not found.");
+    }
+
+    return {
+      ...res,
+      data: normalizeUser(res.data),
+    };
   },
 
   create: async (data: UserFormValues) => {
-    await delay();
-    const stores = storeService.getOptions();
-    const selectedStore = stores.find((store) => store.id === data.storeId);
-
-    const nextUser: UserListItem = {
-      id: `user-${Date.now()}`,
-      ...data,
-      storeName: selectedStore?.name,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString(),
+    const payload = {
+      email: data.email,
+      password: data.password,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      role: data.role,
+      storeId: data.role === UserRole.SUPER_ADMIN ? undefined : data.storeId || undefined,
     };
 
-    mockUsers = [nextUser, ...mockUsers];
+    const res = (await postService(endpoints.users.create, payload)) as {
+      success: boolean;
+      data?: UserApiItem;
+      message?: string;
+    };
 
     return {
-      success: true,
-      data: nextUser,
-      message: "User created.",
+      ...res,
+      data: res.data ? normalizeUser(res.data) : undefined,
     };
   },
 
   update: async (id: string, data: UserFormValues) => {
-    await delay();
-    const stores = storeService.getOptions();
-    const selectedStore = stores.find((store) => store.id === data.storeId);
-    let updatedUser: UserListItem | null = null;
+    const payload = {
+      email: data.email || undefined,
+      password: data.password || undefined,
+      firstName: data.firstName || undefined,
+      lastName: data.lastName || undefined,
+      role: data.role || undefined,
+      storeId: data.role === UserRole.SUPER_ADMIN ? null : data.storeId || null,
+    };
 
-    mockUsers = mockUsers.map((item) => {
-      if (item.id !== id) return item;
-
-      updatedUser = {
-        ...item,
-        ...data,
-        storeName: selectedStore?.name,
-      };
-
-      return updatedUser;
-    });
+    const res = (await patchService(endpoints.users.update(id), payload)) as {
+      success: boolean;
+      data?: UserApiItem;
+      message?: string;
+    };
 
     return {
-      success: true,
-      data: updatedUser,
-      message: "User updated.",
+      ...res,
+      data: res.data ? normalizeUser(res.data) : undefined,
     };
   },
 
-  delete: async (id: string) => {
-    await delay();
-    mockUsers = mockUsers.map((item) =>
-      item.id === id
-        ? { ...item, isActive: false, deactivatedAt: new Date().toISOString() }
-        : item,
-    );
+  delete: (id: string) => deleteService(endpoints.users.delete(id)),
 
-    return {
-      success: true,
-      data: true,
-      message: "User deactivated.",
+  activate: (id: string) => patchService(endpoints.users.activate(id), {}),
+
+  byStore: async (storeId: string) => {
+    const res = (await getService(endpoints.users.byStore(storeId))) as {
+      success: boolean;
+      data?: UserApiItem[];
+      message?: string;
     };
-  },
-
-  activate: async (id: string) => {
-    await delay();
-    mockUsers = mockUsers.map((item) =>
-      item.id === id
-        ? { ...item, isActive: true, deactivatedAt: undefined }
-        : item,
-    );
 
     return {
-      success: true,
-      data: true,
-      message: "User activated.",
+      ...res,
+      data: (res.data ?? []).map(normalizeUser),
     };
   },
 };

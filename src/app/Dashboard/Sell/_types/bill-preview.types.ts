@@ -1,5 +1,5 @@
-import { OrderListItem } from "@/types/order";
+import { BillingInvoice } from "@/types/billing";
 
 export type BillPreview = {
-  order: OrderListItem | null;
+  invoice: BillingInvoice | null;
 };

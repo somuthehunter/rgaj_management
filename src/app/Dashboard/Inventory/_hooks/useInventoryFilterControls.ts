@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { SelectControl } from "@/components/shared/ListControlsBar";
-import { Store } from "@/types";
+import { StoreListItem } from "@/types/store";
 import { InventoryListItem } from "@/types/inventory";
 import {
   INVENTORY_SORT_OPTIONS,
@@ -11,7 +11,7 @@ import { InventorySortValue } from "../_types/inventory-controls.types";
 
 type Params = {
   inventory?: InventoryListItem[];
-  stores: Store[];
+  stores: StoreListItem[];
   isAdmin: boolean;
   selectedStoreId: string;
   selectedCategory: string;

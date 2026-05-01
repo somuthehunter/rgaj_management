@@ -20,17 +20,9 @@ export const isCategoryActive = (category: CategoryListItem) => {
   return true;
 };
 
-export const slugifyCategoryName = (value: string) =>
-  value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-
 export const getCategoryFormDefaults = (
   category?: CategoryListItem,
 ): CategoryFormValues => ({
   name: category?.name ?? "",
-  slug: category?.slug ?? "",
   description: category?.description ?? "",
 });

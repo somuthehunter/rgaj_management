@@ -11,10 +11,8 @@ export const PRODUCT_SORT_OPTIONS: { label: string; value: ProductSortValue }[] 
     { label: "Newest", value: "newest" },
     { label: "Name (A-Z)", value: "name_asc" },
     { label: "Name (Z-A)", value: "name_desc" },
-    { label: "Quantity (Low to High)", value: "qty_asc" },
-    { label: "Quantity (High to Low)", value: "qty_desc" },
-    { label: "Price (Low to High)", value: "price_asc" },
-    { label: "Price (High to Low)", value: "price_desc" },
+    { label: "Price / Unit (Low to High)", value: "price_asc" },
+    { label: "Price / Unit (High to Low)", value: "price_desc" },
   ];
 
 export const PRODUCT_SORT_MAP: Record<
@@ -24,8 +22,6 @@ export const PRODUCT_SORT_MAP: Record<
   newest: {},
   name_asc: { sortBy: "name", sortOrder: "asc" },
   name_desc: { sortBy: "name", sortOrder: "desc" },
-  qty_asc: { sortBy: "quantity", sortOrder: "asc" },
-  qty_desc: { sortBy: "quantity", sortOrder: "desc" },
-  price_asc: { sortBy: "price", sortOrder: "asc" },
-  price_desc: { sortBy: "price", sortOrder: "desc" },
+  price_asc: { sortBy: "pricePerUnit", sortOrder: "asc" },
+  price_desc: { sortBy: "pricePerUnit", sortOrder: "desc" },
 };

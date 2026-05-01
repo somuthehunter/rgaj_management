@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import AddCategoryDialog from "./_component/AddCategoryDialog";
 import CategoryPagination from "./_component/CategoryPagination";
 import CategoryTable from "./_component/CategoryTable";
@@ -8,6 +9,9 @@ import { useCategoryActions } from "./_hooks/useCategoryActions";
 import { useCategoryFilterControls } from "./_hooks/useCategoryFilterControls";
 import { useCategoryFiltersState } from "./_hooks/useCategoryFiltersState";
 import { useCategories } from "./_hooks/useCategories";
+import { getUser } from "@/services/session.service";
+import { normalizeRole } from "@/lib/auth";
+import { UserRole } from "@/types";
 
 const buildPageNumbers = (currentPage: number, totalPages: number) => {
   if (totalPages <= 5) {
@@ -26,6 +30,13 @@ const buildPageNumbers = (currentPage: number, totalPages: number) => {
 };
 
 export default function CategoriesPage() {
+  const [canManage, setCanManage] = useState(false);
+
+  useEffect(() => {
+    const normalizedRole = normalizeRole(getUser()?.role);
+    setCanManage(normalizedRole === UserRole.SUPER_ADMIN);
+  }, []);
+
   const filters = useCategoryFiltersState();
   const { data, isLoading } = useCategories(filters.queryParams);
   const { selectControls } = useCategoryFilterControls({
@@ -48,13 +59,13 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Categories</h1>
-        <AddCategoryDialog />
+        {canManage ? <AddCategoryDialog /> : null}
       </div>
 
       <ListControlsBar
         searchValue={filters.searchInput}
         onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search categories by name or slug..."
+        searchPlaceholder="Search categories by name or description..."
         onReset={filters.resetFilters}
         selectControls={selectControls}
       />
@@ -65,6 +76,7 @@ export default function CategoriesPage() {
         <div className="space-y-4">
           <CategoryTable
             categories={data?.data}
+            canManage={canManage}
             onDeactivate={handleDeactivate}
             onActivate={handleActivate}
           />

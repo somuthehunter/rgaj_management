@@ -1,5 +1,6 @@
 import { CustomerListItem } from "@/types/customer";
 import { buildOrderBillMarkup, formatOrderCurrency, formatOrderDate } from "@/app/Dashboard/Orders/_utils/order.utils";
+import { orderService } from "@/services/order.service";
 
 export const downloadCustomerSummary = (customer: CustomerListItem) => {
   const ordersMarkup = customer.orders
@@ -99,17 +100,22 @@ export const downloadCustomersCsv = (customers: CustomerListItem[]) => {
   URL.revokeObjectURL(url);
 };
 
-export const downloadCustomerLatestBill = (customer: CustomerListItem) => {
+export const downloadCustomerLatestBill = async (customer: CustomerListItem) => {
   const latestOrder = customer.orders[0];
   if (!latestOrder) return;
 
-  const blob = new Blob([buildOrderBillMarkup(latestOrder)], {
+  const resolvedOrder =
+    latestOrder.items.length > 0
+      ? latestOrder
+      : (await orderService.getById(latestOrder.id)).data;
+
+  const blob = new Blob([buildOrderBillMarkup(resolvedOrder)], {
     type: "text/html;charset=utf-8",
   });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
-  anchor.download = `${latestOrder.orderNumber.toLowerCase()}-bill.html`;
+  anchor.download = `${resolvedOrder.orderNumber.toLowerCase()}-bill.html`;
   document.body.appendChild(anchor);
   anchor.click();
   document.body.removeChild(anchor);

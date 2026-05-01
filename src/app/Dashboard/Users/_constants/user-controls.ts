@@ -13,6 +13,7 @@ export const USER_ROLE_OPTIONS: SelectOption[] = [
   { label: "All Roles", value: "all" },
   { label: "Super Admin", value: UserRole.SUPER_ADMIN },
   { label: "Store Admin", value: UserRole.STORE_ADMIN },
+  { label: "Cashier", value: UserRole.CASHIER },
 ];
 
 export const USER_SORT_OPTIONS: SelectOption[] = [

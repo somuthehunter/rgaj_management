@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +15,21 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Download, Eye } from "lucide-react";
 import { OrderListItem } from "@/types/order";
+import { orderService } from "@/services/order.service";
+import { QUERY_KEYS } from "@/constants/query_keys";
+import { getUser } from "@/services/session.service";
+import { normalizeRole } from "@/lib/auth";
+import { UserRole } from "@/types";
+import { toast } from "sonner";
 import {
   buildOrderBillMarkup,
   formatOrderCurrency,
   formatOrderDate,
   getOrderItemsCount,
   getOrderStatusClasses,
+  openPrintMarkup,
 } from "../_utils/order.utils";
+import CreateRefundDialog from "@/app/Dashboard/Refunds/_component/CreateRefundDialog";
 
 type OrderDetailsDialogProps = {
   order: OrderListItem;
@@ -32,6 +41,42 @@ export default function OrderDetailsDialog({
   trigger,
 }: OrderDetailsDialogProps) {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const user = getUser();
+  const role = normalizeRole(user?.role);
+  const canCancel =
+    (role === UserRole.SUPER_ADMIN || role === UserRole.STORE_ADMIN) &&
+    order.status !== "CANCELLED";
+
+  const orderDetailsQuery = useQuery({
+    queryKey: [QUERY_KEYS.ORDERS, "detail", order.id],
+    queryFn: () => orderService.getById(order.id),
+    enabled: open,
+  });
+
+  const resolvedOrder = orderDetailsQuery.data?.data ?? order;
+  const canCreateRefund =
+    resolvedOrder.status !== "CANCELLED" &&
+    (role === UserRole.SUPER_ADMIN ||
+      role === UserRole.STORE_ADMIN ||
+      role === UserRole.CASHIER);
+
+  const cancelOrderMutation = useMutation({
+    mutationFn: () => orderService.cancel(order.id),
+    onSuccess: async () => {
+      toast.success(`Order ${resolvedOrder.orderNumber} cancelled.`);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.ORDERS] }),
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.CUSTOMERS] }),
+      ]);
+      orderDetailsQuery.refetch();
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to cancel invoice.",
+      );
+    },
+  });
 
   const fallbackTrigger = useMemo(
     () => (
@@ -42,17 +87,11 @@ export default function OrderDetailsDialog({
     [],
   );
 
-  const handleDownloadBill = () => {
-    const markup = buildOrderBillMarkup(order);
-    const blob = new Blob([markup], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${order.orderNumber.toLowerCase()}-bill.html`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
+  const handlePrintBill = () => {
+    openPrintMarkup(
+      buildOrderBillMarkup(resolvedOrder),
+      `${resolvedOrder.orderNumber} Bill`,
+    );
   };
 
   return (
@@ -65,46 +104,70 @@ export default function OrderDetailsDialog({
             <DialogHeader className="space-y-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <DialogTitle>Order {order.orderNumber}</DialogTitle>
+                  <DialogTitle>Order {resolvedOrder.orderNumber}</DialogTitle>
                   <DialogDescription>
-                    Full order summary, customer details, item breakdown, and bill download.
+                    Full order summary, customer details, item breakdown, and print-ready bill.
                   </DialogDescription>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <Badge
                     variant="outline"
-                    className={getOrderStatusClasses(order.status)}
+                    className={getOrderStatusClasses(resolvedOrder.status)}
                   >
-                    {order.status}
+                    {resolvedOrder.status}
                   </Badge>
-                  <Button variant="outline" onClick={handleDownloadBill}>
+                  {canCreateRefund && (
+                    <CreateRefundDialog
+                      trigger={<Button variant="outline">Create Refund</Button>}
+                      items={resolvedOrder.items}
+                    />
+                  )}
+                  {canCancel && (
+                    <Button
+                      variant="outline"
+                      onClick={() => cancelOrderMutation.mutate()}
+                      disabled={cancelOrderMutation.isPending}
+                    >
+                      {cancelOrderMutation.isPending ? "Cancelling..." : "Cancel Order"}
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={handlePrintBill}>
                     <Download className="mr-2 h-4 w-4" />
-                    Download Bill
+                    Print Bill
                   </Button>
                 </div>
               </div>
             </DialogHeader>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {orderDetailsQuery.isLoading ? (
+              <div className="mt-6 text-sm text-muted-foreground">Loading order details...</div>
+            ) : orderDetailsQuery.isError ? (
+              <div className="mt-6 text-sm text-destructive">
+                {orderDetailsQuery.error instanceof Error
+                  ? orderDetailsQuery.error.message
+                  : "Failed to load order details."}
+              </div>
+            ) : (
+              <div className="mt-6 grid gap-4 lg:grid-cols-3">
               <section className="rounded-lg border p-4">
                 <h3 className="text-sm font-semibold">Customer Details</h3>
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground">Name:</span>{" "}
-                    {order.customer.name}
+                    {resolvedOrder.customer.name}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Phone:</span>{" "}
-                    {order.customer.phone}
+                    {resolvedOrder.customer.phone}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Email:</span>{" "}
-                    {order.customer.email || "Not provided"}
+                    {resolvedOrder.customer.email || "Not provided"}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Address:</span>{" "}
-                    {order.customer.address || "Not provided"}
+                    {resolvedOrder.customer.address || "Not provided"}
                   </p>
                 </div>
               </section>
@@ -114,19 +177,19 @@ export default function OrderDetailsDialog({
                 <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                   <p>
                     <span className="font-medium text-foreground">Store:</span>{" "}
-                    {order.storeName}
+                    {resolvedOrder.storeName}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Placed On:</span>{" "}
-                    {formatOrderDate(order.createdAt)}
+                    {formatOrderDate(resolvedOrder.createdAt)}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Items:</span>{" "}
-                    {getOrderItemsCount(order)}
+                    {getOrderItemsCount(resolvedOrder)}
                   </p>
                   <p>
                     <span className="font-medium text-foreground">Payment:</span>{" "}
-                    {order.paymentMethod.replaceAll("_", " ")}
+                    {resolvedOrder.paymentMethod.replaceAll("_", " ")}
                   </p>
                 </div>
               </section>
@@ -136,19 +199,20 @@ export default function OrderDetailsDialog({
                 <div className="mt-3 space-y-2 text-sm">
                   <div className="flex items-center justify-between text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>{formatOrderCurrency(order.subtotal)}</span>
+                    <span>{formatOrderCurrency(resolvedOrder.subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-muted-foreground">
                     <span>Tax</span>
-                    <span>{formatOrderCurrency(order.tax)}</span>
+                    <span>{formatOrderCurrency(resolvedOrder.tax)}</span>
                   </div>
                   <div className="flex items-center justify-between border-t pt-2 font-semibold text-foreground">
                     <span>Total</span>
-                    <span>{formatOrderCurrency(order.total)}</span>
+                    <span>{formatOrderCurrency(resolvedOrder.total)}</span>
                   </div>
                 </div>
               </section>
-            </div>
+              </div>
+            )}
 
             <section className="mt-6 rounded-lg border">
               <div className="border-b px-4 py-3">
@@ -162,6 +226,8 @@ export default function OrderDetailsDialog({
                       <th className="px-4 py-3 font-medium">Product</th>
                       <th className="px-4 py-3 font-medium">SKU</th>
                       <th className="px-4 py-3 font-medium">Category</th>
+                      <th className="px-4 py-3 font-medium">RFID</th>
+                      <th className="px-4 py-3 text-right font-medium">Weight</th>
                       <th className="px-4 py-3 text-right font-medium">Qty</th>
                       <th className="px-4 py-3 text-right font-medium">Rate</th>
                       <th className="px-4 py-3 text-right font-medium">Tax</th>
@@ -169,12 +235,18 @@ export default function OrderDetailsDialog({
                     </tr>
                   </thead>
                   <tbody>
-                    {order.items.map((item) => (
+                    {resolvedOrder.items.map((item) => (
                       <tr key={item.id} className="border-b last:border-b-0">
                         <td className="px-4 py-3">{item.productName}</td>
                         <td className="px-4 py-3 text-muted-foreground">{item.sku}</td>
                         <td className="px-4 py-3">
                           <Badge variant="outline">{item.category}</Badge>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          {item.rfid || "N/A"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {item.actualWeight?.toFixed(3) ?? "0.000"} g
                         </td>
                         <td className="px-4 py-3 text-right">{item.quantity}</td>
                         <td className="px-4 py-3 text-right">
@@ -191,10 +263,10 @@ export default function OrderDetailsDialog({
               </div>
             </section>
 
-            {order.notes && (
+            {resolvedOrder.notes && (
               <section className="mt-6 rounded-lg border p-4">
                 <h3 className="text-sm font-semibold">Notes</h3>
-                <p className="mt-2 text-sm text-muted-foreground">{order.notes}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{resolvedOrder.notes}</p>
               </section>
             )}
           </div>
