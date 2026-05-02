@@ -27,6 +27,7 @@ import { getUser, clearSession } from "@/services/session.service";
 import { logoutUser } from "@/services/auth.service";
 import { protectedRoutes } from "@/routes/protected-routes";
 import { normalizeRole } from "@/lib/auth";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 type Props = {
   collapsed: boolean;
@@ -111,19 +112,19 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 h-screen bg-black flex flex-col border-r border-border transition-all duration-300 z-50",
+        "fixed left-0 top-0 h-screen bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-300 z-50",
         sidebarWidthClass,
       )}
     >
       <div
         className={cn(
-          "flex h-16 items-center border-b border-border",
+          "flex h-16 items-center border-b border-sidebar-border",
           isExpanded ? "gap-2 px-4 justify-between" : "justify-center px-2",
         )}
       >
         <div className="flex items-center gap-2 min-w-0">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <Package className="h-4 w-4 text-white" />
+          <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center shrink-0">
+            <Package className="h-4 w-4 text-sidebar-primary-foreground" />
           </div>
           {isExpanded && (
             <span className="font-semibold text-sm tracking-tight truncate">
@@ -185,7 +186,7 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
 
       <div
         className={cn(
-          "border-t border-border p-3 space-y-2",
+          "border-t border-sidebar-border p-3 space-y-2",
           !isExpanded && "px-2",
         )}
       >
@@ -195,6 +196,12 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
             <p className="text-xs truncate">{role}</p>
           </div>
         )}
+        <div className={cn(
+          "flex items-center",
+          isExpanded ? "justify-start" : "justify-center"
+        )}>
+          <ThemeToggle className={isExpanded ? "w-full" : ""} />
+        </div>
         <button
           onClick={handleLogout}
           className={cn(

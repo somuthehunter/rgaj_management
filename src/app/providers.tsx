@@ -3,6 +3,7 @@
 import { NextUIProvider } from "@nextui-org/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
+import { ThemeProvider } from "../hooks/use-theme";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -35,8 +36,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <NextUIProvider>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    </NextUIProvider>
+    <ThemeProvider defaultTheme="light" storageKey="rgaj-theme">
+      <NextUIProvider>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </NextUIProvider>
+    </ThemeProvider>
   );
 }
