@@ -1,0 +1,7 @@
+export const QUERY_TIMINGS = {
+  LIST_STALE_MS: 2 * 60 * 1000,
+  DETAIL_STALE_MS: 5 * 60 * 1000,
+  REPORT_STALE_MS: 5 * 60 * 1000,
+  LIVE_STALE_MS: 60 * 1000,
+} as const;
+

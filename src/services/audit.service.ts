@@ -70,7 +70,16 @@ type InventoryReportResponse = {
       id?: string;
       name?: string;
       sku?: string;
-      category?: string;
+      category?:
+        | string
+        | {
+            id?: string;
+            name?: string;
+            description?: string;
+            isActive?: boolean;
+            createdAt?: string;
+            updatedAt?: string;
+          };
       purity?: string;
     };
     central?: {
@@ -119,7 +128,16 @@ type StoreReportResponse = {
       product?: {
         name?: string;
         sku?: string;
-        category?: string;
+        category?:
+          | string
+          | {
+              id?: string;
+              name?: string;
+              description?: string;
+              isActive?: boolean;
+              createdAt?: string;
+              updatedAt?: string;
+            };
       };
     }>;
     recentInvoices?: Array<{
@@ -237,6 +255,21 @@ const buildReportDateQuery = (params?: { storeId?: string; fromDate?: string; to
   return queryString ? `?${queryString}` : "";
 };
 
+const normalizeCategoryLabel = (
+  category:
+    | string
+    | {
+        id?: string;
+        name?: string;
+      }
+    | null
+    | undefined,
+) => {
+  if (!category) return "";
+  if (typeof category === "string") return category;
+  return category.name ?? "";
+};
+
 export const auditService = {
   getLogs: async (params?: TransactionSearchParams) => {
     const res = (await getService(
@@ -330,7 +363,7 @@ export const auditService = {
         productId: item.product?.id ?? "",
         productName: item.product?.name ?? "Unnamed Product",
         sku: item.product?.sku ?? "N/A",
-        category: item.product?.category ?? "",
+        category: normalizeCategoryLabel(item.product?.category),
         purity: item.product?.purity ?? "",
         centralTotalWeight: item.central?.totalWeight ?? 0,
         centralAvailableWeight: item.central?.availableWeight ?? 0,
@@ -377,7 +410,7 @@ export const auditService = {
           productId: item.productId ?? "",
           productName: item.product?.name ?? "Unnamed Product",
           sku: item.product?.sku ?? "N/A",
-          category: item.product?.category ?? "",
+          category: normalizeCategoryLabel(item.product?.category),
           allocatedWeight: item.allocatedWeight ?? 0,
           soldWeight: item.soldWeight ?? 0,
           returnedWeight: item.returnedWeight ?? 0,

@@ -16,7 +16,6 @@ import { Eye } from "lucide-react";
 import { StoreListItem } from "@/types/store";
 import { isStoreActive } from "../_utils/store.utils";
 import { storeService } from "@/services/store.service";
-import { userService } from "@/services/user.service";
 
 type StoreDetailsDialogProps = {
   store: StoreListItem;
@@ -36,11 +35,6 @@ export default function StoreDetailsDialog({
   const statsQuery = useQuery({
     queryKey: ["store-stats", store.id],
     queryFn: () => storeService.getStats(store.id),
-    enabled: open,
-  });
-  const usersQuery = useQuery({
-    queryKey: ["store-users", store.id],
-    queryFn: () => userService.byStore(store.id),
     enabled: open,
   });
 
@@ -111,15 +105,15 @@ export default function StoreDetailsDialog({
               </div>
             </div>
           ) : null}
-          {usersQuery.isLoading || detailsQuery.isLoading ? (
+          {detailsQuery.isLoading ? (
             <p className="text-xs text-muted-foreground">Loading store staff...</p>
-          ) : usersQuery.isError || detailsQuery.isError ? (
+          ) : detailsQuery.isError ? (
             <p className="text-xs text-destructive">Failed to load store details.</p>
-          ) : usersQuery.data?.data?.length ? (
+          ) : detailsQuery.data?.data?.users?.length ? (
             <div className="space-y-2">
               <p className="text-muted-foreground">Assigned Staff</p>
               <div className="space-y-1">
-                {usersQuery.data.data.map((user) => (
+                {detailsQuery.data.data.users.map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between rounded-md border px-3 py-2"

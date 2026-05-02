@@ -33,7 +33,17 @@ type InventoryApiItem = {
     id: string;
     name?: string;
     sku?: string;
-    category?: string;
+    category?:
+      | string
+      | {
+          id?: string;
+          name?: string;
+          description?: string;
+          isActive?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+        };
+    weightUnit?: "RATI" | "CARAT";
   };
 };
 
@@ -66,7 +76,17 @@ type CentralInventoryApiItem = {
     id: string;
     name?: string;
     sku?: string;
-    category?: string;
+    category?:
+      | string
+      | {
+          id?: string;
+          name?: string;
+          description?: string;
+          isActive?: boolean;
+          createdAt?: string;
+          updatedAt?: string;
+        };
+    weightUnit?: "RATI" | "CARAT";
     purity?: string;
     hsnCode?: string;
     makingChargeType?: "PER_GRAM" | "FIXED" | "PERCENTAGE";
@@ -154,6 +174,21 @@ type InventoryLedgerSummaryResponse = {
   message?: string;
 };
 
+const normalizeCategoryLabel = (
+  category:
+    | string
+    | {
+        id?: string;
+        name?: string;
+      }
+    | null
+    | undefined,
+) => {
+  if (!category) return "";
+  if (typeof category === "string") return category;
+  return category.name ?? "";
+};
+
 const normalizeInventoryItem = (
   item: InventoryApiItem,
   storeName: string,
@@ -164,10 +199,10 @@ const normalizeInventoryItem = (
   productId: item.productId,
   productName: item.product?.name ?? "Unnamed Product",
   productSku: item.product?.sku ?? "N/A",
-  category: item.product?.category ?? "",
+  category: normalizeCategoryLabel(item.product?.category),
   quantityNumber: item.allocatedStones ?? 0,
   measuredQuantity: item.availableWeight ?? item.allocatedWeight ?? 0,
-  measuredUnit: "carat",
+  measuredUnit: item.product?.weightUnit ?? "CARAT",
   soldWeight: item.soldWeight ?? 0,
   returnedWeight: item.returnedWeight ?? 0,
   stoneWeight: item.stoneWeight ?? 0,
@@ -181,7 +216,8 @@ const normalizeCentralInventoryItem = (
   productId: item.productId,
   productName: item.product?.name ?? "Unnamed Product",
   productSku: item.product?.sku ?? "N/A",
-  category: item.product?.category ?? "",
+  category: normalizeCategoryLabel(item.product?.category),
+  weightUnit: item.product?.weightUnit ?? "CARAT",
   totalWeight: item.totalWeight ?? 0,
   availableWeight: item.availableWeight ?? 0,
   reservedWeight: item.reservedWeight ?? 0,
@@ -322,9 +358,9 @@ export const inventoryService = {
         sku: item.product?.sku ?? "N/A",
         name: item.product?.name ?? "Unnamed Product",
         categoryId: "",
-        categoryName: item.product?.category ?? "",
+        categoryName: normalizeCategoryLabel(item.product?.category),
         category: null,
-        weightUnit: "CARAT" as const,
+        weightUnit: item.product?.weightUnit ?? "CARAT",
         pricePerUnit: 0,
         hsnCode: item.product?.hsnCode ?? "",
         gstRate: item.product?.gstRate ?? 0,

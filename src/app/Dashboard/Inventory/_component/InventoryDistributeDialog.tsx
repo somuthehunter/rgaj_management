@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -21,18 +21,16 @@ import {
 } from "@/components/ui/select";
 import { Boxes } from "lucide-react";
 import { toast } from "sonner";
-import { ProductListItem } from "@/types/product";
 import { StoreListItem } from "@/types/store";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { inventoryService } from "@/services/inventory.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
 
 type InventoryDistributeDialogProps = {
-  products?: ProductListItem[];
   stores: StoreListItem[];
 };
 
 export default function InventoryDistributeDialog({
-  products = [],
   stores,
 }: InventoryDistributeDialogProps) {
   const queryClient = useQueryClient();
@@ -41,8 +39,16 @@ export default function InventoryDistributeDialog({
   const [storeId, setStoreId] = useState("");
   const [weight, setWeight] = useState("");
   const [stoneCount, setStoneCount] = useState("");
-  const [stoneWeight, setStoneWeight] = useState("");
   const [notes, setNotes] = useState("");
+
+  const productsQuery = useQuery({
+    queryKey: ["distribute-central-products"],
+    queryFn: () => inventoryService.getCentralProducts(),
+    enabled: open,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+  });
 
   const allocateMutation = useMutation({
     mutationFn: inventoryService.allocate,
@@ -71,21 +77,21 @@ export default function InventoryDistributeDialog({
 
   const productOptions = useMemo(
     () =>
-      products.filter(
+      (productsQuery.data ?? []).filter(
         (product) =>
           product.id &&
           product.name &&
-          (product.isActive ?? product.active ?? true),
+          (product.isActive ?? true),
       ),
-    [products],
+    [productsQuery.data],
   );
+  const selectedProduct = productOptions.find((product) => product.id === productId);
 
   const resetForm = () => {
     setProductId("");
     setStoreId("");
     setWeight("");
     setStoneCount("");
-    setStoneWeight("");
     setNotes("");
   };
 
@@ -96,7 +102,6 @@ export default function InventoryDistributeDialog({
       storeId,
       weight: Number(weight),
       stoneCount: stoneCount ? Number(stoneCount) : undefined,
-      stoneWeight: stoneWeight ? Number(stoneWeight) : undefined,
       notes: notes.trim() || undefined,
     });
   };
@@ -131,7 +136,10 @@ export default function InventoryDistributeDialog({
               <SelectContent>
                 {productOptions.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name} {typeof product.availableWeight === "number" ? `(${product.availableWeight} wt)` : ""}
+                    {product.name}{" "}
+                    {typeof product.availableWeight === "number"
+                      ? `(${product.availableWeight} ${product.weightUnit})`
+                      : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -169,32 +177,23 @@ export default function InventoryDistributeDialog({
               onChange={(event) => setWeight(event.target.value)}
               placeholder="Enter allocated weight"
             />
+            {selectedProduct ? (
+              <p className="text-xs text-muted-foreground">
+                Weight unit: {selectedProduct.weightUnit}
+              </p>
+            ) : null}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Stone Count</Label>
-              <Input
-                type="number"
-                step="1"
-                min="0"
-                value={stoneCount}
-                onChange={(event) => setStoneCount(event.target.value)}
-                placeholder="Optional stone count"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Stone Weight</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={stoneWeight}
-                onChange={(event) => setStoneWeight(event.target.value)}
-                placeholder="Optional stone weight"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Stone Count</Label>
+            <Input
+              type="number"
+              step="1"
+              min="0"
+              value={stoneCount}
+              onChange={(event) => setStoneCount(event.target.value)}
+              placeholder="Optional stone count"
+            />
           </div>
 
           <div className="space-y-2">

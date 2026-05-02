@@ -1,8 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { productService } from "@/services/product.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { getUser } from "@/services/session.service";
 import { ApiResponse, PaginatedResponse } from "@/types";
 import { ProductListItem, ProductSearchParams } from "@/types/product";
@@ -32,6 +33,10 @@ export const useProducts = (params?: ProductSearchParams) => {
       page,
       limit,
     ],
+    staleTime: QUERY_TIMINGS.LIST_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const requestParams = {
         search,

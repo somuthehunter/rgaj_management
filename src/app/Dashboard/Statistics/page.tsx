@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -55,11 +56,15 @@ export default function StatisticsPage() {
   const user = getUser();
   const role = normalizeRole(user?.role);
   const isSuperAdmin = role === UserRole.SUPER_ADMIN;
+  const canLoadScopedReports = isSuperAdmin ? Boolean(selectedStoreId) : true;
 
   const storesQuery = useQuery({
     queryKey: ["statistics-store-options"],
     queryFn: () => storeService.search({ page: 1, limit: 100, isActive: true }),
     enabled: isSuperAdmin,
+    staleTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS * 2,
+    refetchOnMount: false,
   });
 
   useEffect(() => {
@@ -93,18 +98,28 @@ export default function StatisticsPage() {
         storeId: isSuperAdmin ? selectedStoreId || undefined : undefined,
         ...reportFilters,
       }),
+    enabled: canLoadScopedReports,
+    staleTime: QUERY_TIMINGS.REPORT_STALE_MS,
+    gcTime: QUERY_TIMINGS.REPORT_STALE_MS * 2,
+    refetchOnMount: false,
   });
 
   const inventoryReportQuery = useQuery({
     queryKey: ["audit-inventory-report"],
     queryFn: () => auditService.getInventoryReport(),
     enabled: isSuperAdmin,
+    staleTime: QUERY_TIMINGS.REPORT_STALE_MS,
+    gcTime: QUERY_TIMINGS.REPORT_STALE_MS * 2,
+    refetchOnMount: false,
   });
 
   const storeReportQuery = useQuery({
     queryKey: ["audit-store-report", selectedStoreId, fromDate, toDate],
     queryFn: () => auditService.getStoreReport(selectedStoreId, reportFilters),
     enabled: Boolean(selectedStoreId),
+    staleTime: QUERY_TIMINGS.REPORT_STALE_MS,
+    gcTime: QUERY_TIMINGS.REPORT_STALE_MS * 2,
+    refetchOnMount: false,
   });
 
   const refundsQuery = useQuery({
@@ -132,6 +147,10 @@ export default function StatisticsPage() {
 
       return rows;
     },
+    enabled: canLoadScopedReports,
+    staleTime: QUERY_TIMINGS.REPORT_STALE_MS,
+    gcTime: QUERY_TIMINGS.REPORT_STALE_MS * 2,
+    refetchOnMount: false,
   });
 
   const salesData = salesReportQuery.data?.data;

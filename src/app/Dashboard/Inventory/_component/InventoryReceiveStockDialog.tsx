@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -22,23 +22,30 @@ import {
 import { PackagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { ProductListItem } from "@/types/product";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { inventoryService } from "@/services/inventory.service";
+import { productService } from "@/services/product.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
 
-type InventoryReceiveStockDialogProps = {
-  products?: ProductListItem[];
-};
-
-export default function InventoryReceiveStockDialog({
-  products = [],
-}: InventoryReceiveStockDialogProps) {
+export default function InventoryReceiveStockDialog() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [productId, setProductId] = useState("");
   const [totalWeight, setTotalWeight] = useState("");
   const [totalStones, setTotalStones] = useState("");
-  const [stoneWeight, setStoneWeight] = useState("");
   const [notes, setNotes] = useState("");
+
+  const productsQuery = useQuery({
+    queryKey: ["receive-stock-products"],
+    queryFn: async () => {
+      const res = await productService.getAll({ page: 1, limit: 100, isActive: true });
+      return res.data;
+    },
+    enabled: open,
+    staleTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS * 2,
+    refetchOnMount: false,
+  });
 
   const receiveStockMutation = useMutation({
     mutationFn: inventoryService.receiveCentralStock,
@@ -63,30 +70,51 @@ export default function InventoryReceiveStockDialog({
 
   const productOptions = useMemo(
     () =>
-      products.filter(
+      (productsQuery.data ?? []).filter(
         (product) =>
           product.id &&
           product.name &&
           (product.isActive ?? product.active ?? true),
       ),
-    [products],
+    [productsQuery.data],
   );
+  const selectedProduct = productOptions.find((product) => product.id === productId);
 
   const resetForm = () => {
     setProductId("");
     setTotalWeight("");
     setTotalStones("");
-    setStoneWeight("");
     setNotes("");
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const parsedWeight = Number(totalWeight);
+    const parsedStones = totalStones ? Number(totalStones) : undefined;
+
+    if (!productId) {
+      toast.error("Select a product first.");
+      return;
+    }
+
+    if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
+      toast.error("Enter a valid total weight.");
+      return;
+    }
+
+    if (
+      parsedStones !== undefined &&
+      (!Number.isInteger(parsedStones) || parsedStones < 0)
+    ) {
+      toast.error("Total stones must be a whole number.");
+      return;
+    }
+
     receiveStockMutation.mutate({
       productId,
-      totalWeight: Number(totalWeight),
-      totalStones: totalStones ? Number(totalStones) : undefined,
-      stoneWeight: stoneWeight ? Number(stoneWeight) : undefined,
+      totalWeight: parsedWeight,
+      totalStones: parsedStones,
       notes: notes.trim() || undefined,
     });
   };
@@ -100,7 +128,7 @@ export default function InventoryReceiveStockDialog({
       }}
     >
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={receiveStockMutation.isPending}>
           <PackagePlus className="mr-2 h-4 w-4" />
           Receive Stock
         </Button>
@@ -138,32 +166,23 @@ export default function InventoryReceiveStockDialog({
               onChange={(event) => setTotalWeight(event.target.value)}
               placeholder="Enter total weight"
             />
+            {selectedProduct ? (
+              <p className="text-xs text-muted-foreground">
+                Weight unit: {selectedProduct.weightUnit}
+              </p>
+            ) : null}
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Total Stones</Label>
-              <Input
-                type="number"
-                step="1"
-                min="0"
-                value={totalStones}
-                onChange={(event) => setTotalStones(event.target.value)}
-                placeholder="Optional total stones"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Stone Weight</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={stoneWeight}
-                onChange={(event) => setStoneWeight(event.target.value)}
-                placeholder="Optional stone weight"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Total Stones</Label>
+            <Input
+              type="number"
+              step="1"
+              min="0"
+              value={totalStones}
+              onChange={(event) => setTotalStones(event.target.value)}
+              placeholder="Optional total stones"
+            />
           </div>
 
           <div className="space-y-2">

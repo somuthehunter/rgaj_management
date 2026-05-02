@@ -67,16 +67,7 @@ export function useLogin() {
     },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const submitLogin = () => {
     const parsed = loginSchema.safeParse(formData);
 
     if (!parsed.success) {
@@ -89,10 +80,23 @@ export function useLogin() {
     mutation.mutate(parsed.data);
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitLogin();
+  };
+
   return {
     formData,
     handleChange,
     handleSubmit,
+    submitLogin,
     isPending: mutation.isPending,
   };
 }

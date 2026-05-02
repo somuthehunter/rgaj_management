@@ -24,22 +24,22 @@ export default function InventorySummaryTable({
     {
       id: "allocated",
       header: "Allocated",
-      cell: (row) => `${row.totalAllocatedWeight.toFixed(3)} g`,
+      cell: (row) => row.totalAllocatedWeight.toFixed(3),
     },
     {
       id: "sold",
       header: "Sold",
-      cell: (row) => `${row.totalSoldWeight.toFixed(3)} g`,
+      cell: (row) => row.totalSoldWeight.toFixed(3),
     },
     {
       id: "available",
       header: "Available",
-      cell: (row) => `${row.totalAvailableWeight.toFixed(3)} g`,
+      cell: (row) => row.totalAvailableWeight.toFixed(3),
     },
     {
       id: "returned",
       header: "Returned",
-      cell: (row) => `${row.totalReturnedWeight.toFixed(3)} g`,
+      cell: (row) => row.totalReturnedWeight.toFixed(3),
     },
     {
       id: "products",

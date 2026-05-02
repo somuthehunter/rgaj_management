@@ -38,17 +38,17 @@ export default function InventoryTable({ inventory }: InventoryTableProps) {
     {
       id: "available",
       header: "Available",
-      cell: (row) => `${row.measuredQuantity.toFixed(3)} g`,
+      cell: (row) => `${row.measuredQuantity.toFixed(3)} ${row.measuredUnit}`,
     },
     {
       id: "sold",
       header: "Sold",
-      cell: (row) => `${(row.soldWeight ?? 0).toFixed(3)} g`,
+      cell: (row) => `${(row.soldWeight ?? 0).toFixed(3)} ${row.measuredUnit}`,
     },
     {
       id: "returned",
       header: "Returned",
-      cell: (row) => `${(row.returnedWeight ?? 0).toFixed(3)} g`,
+      cell: (row) => `${(row.returnedWeight ?? 0).toFixed(3)} ${row.measuredUnit}`,
     },
   ];
 
