@@ -25,6 +25,12 @@ jobs:
           script: |
             set -e
 
+            # Load environment variables and PATH (fixes "npm: command not found")
+            source ~/.bashrc || true
+            source ~/.profile || true
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             # Navigate to project directory
             cd /var/www/rgaj_management
 
