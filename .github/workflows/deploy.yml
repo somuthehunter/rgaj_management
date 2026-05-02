@@ -1,22 +1,29 @@
-name: Deploy rgaj_management to VPS
+name: 🚀 Deploy RGAJ Management Frontend to VPS
 
 on:
 push:
 branches:
 - master
+
 workflow_dispatch:
+inputs:
+deploy_note:
+description: "Manual deployment trigger"
+required: false
+default: "Deploy latest frontend build"
 
 jobs:
 deploy:
+name: SSH Deploy to Production VPS
 runs-on: ubuntu-latest
 environment: ratna-fr
 
 ```
 steps:
-  - name: Checkout code
+  - name: 📦 Checkout Repository
     uses: actions/checkout@v4
 
-  - name: Deploy to VPS via SSH
+  - name: 🚀 Deploy Application to VPS
     uses: appleboy/ssh-action@v1.0.3
     with:
       host: ${{ secrets.VPS_HOST }}
