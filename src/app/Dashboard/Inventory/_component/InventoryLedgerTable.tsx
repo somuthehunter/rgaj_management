@@ -38,12 +38,12 @@ export default function InventoryLedgerTable({
     {
       id: "weight",
       header: "Weight",
-      cell: (row) => `${row.weight.toFixed(3)} g`,
+      cell: (row) => row.weight.toFixed(3),
     },
     {
       id: "net-gold",
       header: "Net Gold",
-      cell: (row) => `${row.netGoldWeight.toFixed(3)} g`,
+      cell: (row) => row.netGoldWeight.toFixed(3),
     },
     {
       id: "date",
@@ -61,7 +61,7 @@ export default function InventoryLedgerTable({
               <p className="text-xs text-muted-foreground">{item.type}</p>
               <p className="mt-1 text-lg font-semibold">{item.count}</p>
               <p className="text-xs text-muted-foreground">
-                {item.totalWeight.toFixed(3)} g total
+                {item.totalWeight.toFixed(3)} total weight
               </p>
             </div>
           ))}

@@ -90,9 +90,18 @@ export default function InventoryAdjustStockDialog({
               <p className="mt-1 text-muted-foreground">Loading stock details...</p>
             ) : detailsQuery.data?.data ? (
               <div className="mt-2 space-y-1 text-muted-foreground">
-                <p>Available: {detailsQuery.data.data.availableWeight.toFixed(3)} g</p>
-                <p>Total: {detailsQuery.data.data.totalWeight.toFixed(3)} g</p>
-                <p>Reserved: {detailsQuery.data.data.reservedWeight.toFixed(3)} g</p>
+                <p>
+                  Available: {detailsQuery.data.data.availableWeight.toFixed(3)}{" "}
+                  {detailsQuery.data.data.weightUnit}
+                </p>
+                <p>
+                  Total: {detailsQuery.data.data.totalWeight.toFixed(3)}{" "}
+                  {detailsQuery.data.data.weightUnit}
+                </p>
+                <p>
+                  Reserved: {detailsQuery.data.data.reservedWeight.toFixed(3)}{" "}
+                  {detailsQuery.data.data.weightUnit}
+                </p>
               </div>
             ) : null}
           </div>

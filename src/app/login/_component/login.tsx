@@ -1,15 +1,24 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useLogin } from "../_hooks/useLogin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function Login() {
-  const { formData, handleChange, handleSubmit, isPending } = useLogin();
+  const { formData, handleChange, handleSubmit, submitLogin, isPending } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+
+    if (window.location.search) {
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-2">
@@ -42,7 +51,12 @@ export default function Login() {
             </p>
           </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
+          <form
+            className="space-y-4"
+            onSubmit={handleSubmit}
+            method="post"
+            action="/login"
+          >
             <div>
               <label className="mb-1 block text-sm">Email *</label>
               <Input
@@ -91,7 +105,12 @@ export default function Login() {
               </a>
             </div>
 
-            <Button type="submit" disabled={isPending} className="w-full">
+            <Button
+              type="button"
+              onClick={submitLogin}
+              disabled={!isHydrated || isPending}
+              className="w-full"
+            >
               {isPending ? "Signing in..." : "Sign In"}
             </Button>
           </form>

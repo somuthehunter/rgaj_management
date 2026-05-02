@@ -33,22 +33,22 @@ export default function CentralInventoryTable({
     {
       id: "total-weight",
       header: "Total Weight",
-      cell: (row) => `${row.totalWeight.toFixed(3)} g`,
+      cell: (row) => `${row.totalWeight.toFixed(3)} ${row.weightUnit}`,
     },
     {
       id: "available-weight",
       header: "Available Weight",
-      cell: (row) => `${row.availableWeight.toFixed(3)} g`,
+      cell: (row) => `${row.availableWeight.toFixed(3)} ${row.weightUnit}`,
     },
     {
       id: "reserved-weight",
       header: "Reserved",
-      cell: (row) => `${row.reservedWeight.toFixed(3)} g`,
+      cell: (row) => `${row.reservedWeight.toFixed(3)} ${row.weightUnit}`,
     },
     {
       id: "net-gold",
       header: "Net Gold",
-      cell: (row) => `${row.netGoldWeight.toFixed(3)} g`,
+      cell: (row) => `${row.netGoldWeight.toFixed(3)} ${row.weightUnit}`,
     },
     {
       id: "total-stones",

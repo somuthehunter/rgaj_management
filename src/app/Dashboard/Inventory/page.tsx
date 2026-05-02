@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ListControlsBar from "@/components/shared/ListControlsBar";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { getUser } from "@/services/session.service";
 import { UserRole } from "@/types";
 import { normalizeRole } from "@/lib/auth";
 import { useStores } from "../Stores/_hooks/useStores";
-import { productService } from "@/services/product.service";
 import InventoryTable from "./_component/InventoryTable";
 import CentralInventoryTable from "./_component/CentralInventoryTable";
 import InventoryPagination from "./_component/InventoryPagination";
@@ -45,8 +45,6 @@ const buildRange = (currentPage: number, itemsPerPage: number, totalItems: numbe
 });
 
 export default function InventoryPage() {
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [userStoreId, setUserStoreId] = useState("");
   const [centralPage, setCentralPage] = useState(1);
   const [ledgerPage, setLedgerPage] = useState(1);
   const [ledgerType, setLedgerType] = useState("");
@@ -59,48 +57,48 @@ export default function InventoryPage() {
   const [summaryOpen, setSummaryOpen] = useState(true);
   const [ledgerOpen, setLedgerOpen] = useState(true);
 
-  useEffect(() => {
-    const user = getUser();
-    const normalizedRole = normalizeRole(user?.role);
-    setIsAdmin(normalizedRole === UserRole.SUPER_ADMIN);
-    setUserStoreId(user?.storeId ?? "");
-  }, []);
+  const user = getUser();
+  const normalizedRole = normalizeRole(user?.role);
+  const isAdmin = normalizedRole === UserRole.SUPER_ADMIN;
+  const userStoreId = user?.storeId ?? "";
+  const canLoadInventory = isAdmin || Boolean(userStoreId);
 
   const filters = useInventoryFiltersState({
     isAdmin,
     userStoreId,
   });
 
-  const { data, isLoading, isError, error } = useInventory(filters.queryParams);
+  const { data, isLoading, isError, error } = useInventory(filters.queryParams, {
+    enabled: canLoadInventory,
+  });
   const centralInventoryQuery = useQuery({
     queryKey: ["central-inventory-list", centralPage],
     queryFn: () => inventoryService.getCentralInventory(centralPage, 10),
-    enabled: isAdmin,
+    enabled: isAdmin && centralOpen,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
   });
   const inventorySummaryQuery = useQuery({
     queryKey: ["inventory-summary"],
     queryFn: () => inventoryService.getSummary(),
-    enabled: isAdmin,
+    enabled: isAdmin && summaryOpen,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
   });
-  const allProductsQuery = useQuery({
-    queryKey: ["inventory-product-options"],
-    queryFn: async () => {
-      const res = await productService.getAll({ page: 1, limit: 100, isActive: true });
-      return res.data;
-    },
-    enabled: isAdmin,
-  });
-  const adminInventoryQuery = useQuery({
-    queryKey: ["inventory-transfer-options"],
-    queryFn: () => inventoryService.getAll({ page: 1, limit: 100 }),
-    enabled: isAdmin,
-  });
-  const centralProductsQuery = useQuery({
+  const ledgerProductsQuery = useQuery({
     queryKey: ["central-inventory-products"],
     queryFn: () => inventoryService.getCentralProducts(),
-    enabled: isAdmin,
+    enabled: isAdmin && ledgerOpen,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
   });
-  const storesQuery = useStores({ page: 1, limit: 100, isActive: true });
+  const storesQuery = useStores(
+    { page: 1, limit: 100, isActive: true },
+    { enabled: isAdmin },
+  );
   const ledgerQuery = useQuery({
     queryKey: [
       "inventory-ledger",
@@ -121,12 +119,18 @@ export default function InventoryPage() {
         fromDate: ledgerFromDate || undefined,
         toDate: ledgerToDate || undefined,
       }),
-    enabled: isAdmin,
+    enabled: isAdmin && ledgerOpen,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
   });
   const ledgerSummaryQuery = useQuery({
     queryKey: ["inventory-ledger-summary", ledgerProductId],
     queryFn: () => inventoryService.getLedgerSummary(ledgerProductId || undefined),
-    enabled: isAdmin,
+    enabled: isAdmin && ledgerOpen,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
   });
 
   const { selectControls } = useInventoryFilterControls({
@@ -162,28 +166,18 @@ export default function InventoryPage() {
   const ledgerRange = buildRange(ledgerCurrentPage, ledgerItemsPerPage, ledgerTotalItems);
   const ledgerPageNumbers = buildPageNumbers(ledgerCurrentPage, ledgerTotalPages);
 
-  const storeInventoryRows = useMemo(
-    () => adminInventoryQuery.data?.data ?? [],
-    [adminInventoryQuery.data?.data],
-  );
   const ledgerTypeOptions = ["ALLOCATION", "SALE", "REFUND", "ADJUSTMENT"] as const;
 
   const productOptions = useMemo(() => {
-    const centralRows = centralInventoryQuery.data?.data ?? [];
-    const storeRows = storeInventoryRows;
+    const centralRows = ledgerProductsQuery.data ?? [];
     const seen = new Map<string, string>();
 
     centralRows.forEach((item) => {
-      seen.set(item.productId, `${item.productName} (${item.productSku})`);
-    });
-    storeRows.forEach((item) => {
-      if (!seen.has(item.productId)) {
-        seen.set(item.productId, `${item.productName} (${item.productSku})`);
-      }
+      seen.set(item.id, `${item.name} (${item.sku})`);
     });
 
     return Array.from(seen.entries()).map(([id, label]) => ({ id, label }));
-  }, [centralInventoryQuery.data?.data, storeInventoryRows]);
+  }, [ledgerProductsQuery.data]);
 
   return (
     <div className="space-y-6">
@@ -191,15 +185,9 @@ export default function InventoryPage() {
         <h1 className="text-2xl font-bold">Inventory</h1>
         {isAdmin && (
           <div className="flex flex-wrap items-center gap-2">
-            <InventoryReceiveStockDialog products={allProductsQuery.data ?? []} />
-            <InventoryDistributeDialog
-              products={centralProductsQuery.data ?? []}
-              stores={storesQuery.data?.data ?? []}
-            />
-            <InventoryTransferDialog
-              stores={storesQuery.data?.data ?? []}
-              inventory={storeInventoryRows}
-            />
+            <InventoryReceiveStockDialog />
+            <InventoryDistributeDialog stores={storesQuery.data?.data ?? []} />
+            <InventoryTransferDialog stores={storesQuery.data?.data ?? []} />
           </div>
         )}
       </div>

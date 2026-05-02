@@ -1,19 +1,19 @@
 import { base_url } from "./config";
 import endpoints from "@/constants/query_const";
+import {
+  clearSession,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+} from "./session.service";
 
 type JsonObject = Record<string, unknown>;
-
-const ACCESS_TOKEN_KEY = "token";
-const USER_KEY = "user";
-const REFRESH_TOKEN_KEY = "refreshToken";
 
 let refreshPromise: Promise<string | null> | null = null;
 
 const getAuthHeaders = (extra?: Record<string, string>) => {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem(ACCESS_TOKEN_KEY)
-      : null;
+  const token = getAccessToken();
 
   return {
     "Content-Type": "application/json",
@@ -25,8 +25,7 @@ const getAuthHeaders = (extra?: Record<string, string>) => {
 const clearSessionAndRedirect = () => {
   if (typeof window === "undefined") return;
 
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(USER_KEY);
+  clearSession();
 
   if (window.location.pathname !== "/login") {
     window.location.href = "/login";
@@ -73,10 +72,7 @@ const refreshAccessToken = async (): Promise<string | null> => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          refreshToken:
-            typeof window !== "undefined"
-              ? localStorage.getItem(REFRESH_TOKEN_KEY)
-              : null,
+          refreshToken: getRefreshToken(),
         }),
       });
 
@@ -88,9 +84,17 @@ const refreshAccessToken = async (): Promise<string | null> => {
         (data?.accessToken as string | undefined) ||
         (payload?.accessToken as string | undefined) ||
         null;
+      const nextRefreshToken =
+        (data?.refreshToken as string | undefined) ||
+        (payload?.refreshToken as string | undefined) ||
+        null;
 
       if (nextToken) {
-        localStorage.setItem(ACCESS_TOKEN_KEY, nextToken);
+        setAccessToken(nextToken);
+      }
+
+      if (nextRefreshToken) {
+        setRefreshToken(nextRefreshToken);
       }
 
       return nextToken;

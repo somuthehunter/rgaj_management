@@ -6,6 +6,64 @@
 
 @layer base {
   :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 242 48% 47%;
+    --primary-foreground: 0 0% 100%;
+
+    --primary-light: 217 100% 78%;
+
+    --secondary: 242 71% 70%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 221 91% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 358 84% 71%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --info: 221 91% 70%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 242 48% 47%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 210 40% 98%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 242 48% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-ring: 242 48% 47%;
+
+    --chart-1: 242 48% 47%;
+    --chart-2: 221 91% 70%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 358 84% 71%;
+  }
+
+  .dark {
     --background: 222 47% 6%;
     --foreground: 210 40% 96%;
 
@@ -17,6 +75,8 @@
 
     --primary: 172 66% 50%;
     --primary-foreground: 222 47% 6%;
+
+    --primary-light: 217 100% 78%;
 
     --secondary: 222 30% 14%;
     --secondary-foreground: 210 40% 90%;
@@ -83,19 +143,19 @@
   }
 
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(172 66% 50%), hsl(172 66% 40%));
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-light)));
   }
 
   .gradient-card {
-    background: linear-gradient(180deg, hsl(222 44% 10%), hsl(222 44% 7%));
+    background: linear-gradient(180deg, hsl(var(--card)), hsl(var(--card)) 50%, hsl(var(--muted)));
   }
 
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(172 66% 50%), hsl(217 91% 60%));
+    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
   }
 
   .sidebar-glow {
-    box-shadow: 1px 0 20px -5px hsl(172 66% 50% / 0.1);
+    box-shadow: 1px 0 20px -5px hsl(var(--primary) / 0.1);
   }
 }

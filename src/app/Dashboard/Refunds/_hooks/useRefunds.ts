@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query_keys";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { PaginatedResponse } from "@/types";
 import { RefundListItem, RefundSearchParams } from "@/types/refund";
 import { refundService } from "@/services/refund.service";
@@ -28,6 +29,10 @@ export const useRefunds = (params?: RefundSearchParams) => {
       page,
       limit,
     ],
+    staleTime: QUERY_TIMINGS.LIST_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
     queryFn: () =>
       search
         ? refundService.search({

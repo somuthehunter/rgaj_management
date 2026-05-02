@@ -1,4 +1,4 @@
-export type InventoryMeasurementUnit = "ratti" | "carat";
+export type InventoryMeasurementUnit = "RATI" | "CARAT";
 
 export type InventoryListItem = {
   id: string;
@@ -22,7 +22,6 @@ export type InventoryAllocationPayload = {
   storeId: string;
   weight: number;
   stoneCount?: number;
-  stoneWeight?: number;
   notes?: string;
 };
 
@@ -30,7 +29,6 @@ export type CentralInventoryPayload = {
   productId: string;
   totalWeight: number;
   totalStones?: number;
-  stoneWeight?: number;
   notes?: string;
 };
 
@@ -52,6 +50,7 @@ export type CentralInventoryListItem = {
   productName: string;
   productSku: string;
   category: string;
+  weightUnit: InventoryMeasurementUnit;
   totalWeight: number;
   availableWeight: number;
   reservedWeight: number;

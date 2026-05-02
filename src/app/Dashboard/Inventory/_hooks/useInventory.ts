@@ -1,12 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query_keys";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { inventoryService } from "@/services/inventory.service";
 import { PaginatedResponse } from "@/types";
 import { InventoryListItem, InventorySearchParams } from "@/types/inventory";
 
-export const useInventory = (params?: InventorySearchParams) => {
+type UseInventoryOptions = {
+  enabled?: boolean;
+};
+
+export const useInventory = (
+  params?: InventorySearchParams,
+  options?: UseInventoryOptions,
+) => {
   const search = params?.search?.trim() ?? "";
   const storeId = params?.storeId ?? "";
   const category = params?.category ?? "";
@@ -26,6 +34,11 @@ export const useInventory = (params?: InventorySearchParams) => {
       page,
       limit,
     ],
+    enabled: options?.enabled ?? true,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
     queryFn: () =>
       inventoryService.getAll({
         search,

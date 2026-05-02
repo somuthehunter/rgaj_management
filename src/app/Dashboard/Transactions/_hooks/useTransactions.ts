@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query_keys";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { transactionService } from "@/services/transaction.service";
 import { PaginatedResponse } from "@/types";
 import { TransactionLogItem, TransactionSearchParams } from "@/types/transaction";
@@ -30,6 +31,10 @@ export const useTransactions = (params?: TransactionSearchParams) => {
       page,
       limit,
     ],
+    staleTime: QUERY_TIMINGS.LIST_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
     queryFn: () =>
       search
         ? transactionService.search({

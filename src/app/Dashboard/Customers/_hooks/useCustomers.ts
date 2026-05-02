@@ -1,7 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "@/constants/query_keys";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { customerService } from "@/services/customer.service";
 import { PaginatedResponse } from "@/types";
 import { CustomerListItem, CustomerSearchParams } from "@/types/customer";
@@ -24,6 +25,10 @@ export const useCustomers = (params?: CustomerSearchParams) => {
       page,
       limit,
     ],
+    staleTime: QUERY_TIMINGS.LIST_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+    placeholderData: keepPreviousData,
     queryFn: () =>
       search
         ? customerService.search({

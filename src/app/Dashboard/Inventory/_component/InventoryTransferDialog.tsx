@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,17 +23,16 @@ import {
 } from "@/components/ui/select";
 import { InventoryListItem } from "@/types/inventory";
 import { StoreListItem } from "@/types/store";
+import { QUERY_TIMINGS } from "@/constants/query_options";
 import { inventoryService } from "@/services/inventory.service";
 import { QUERY_KEYS } from "@/constants/query_keys";
 
 type InventoryTransferDialogProps = {
   stores: StoreListItem[];
-  inventory: InventoryListItem[];
 };
 
 export default function InventoryTransferDialog({
   stores,
-  inventory,
 }: InventoryTransferDialogProps) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -41,6 +40,17 @@ export default function InventoryTransferDialog({
   const [toStoreId, setToStoreId] = useState("");
   const [productId, setProductId] = useState("");
   const [weight, setWeight] = useState("");
+
+  const inventoryQuery = useQuery({
+    queryKey: ["inventory-transfer-options"],
+    queryFn: () => inventoryService.getAll({ page: 1, limit: 100 }),
+    enabled: open,
+    staleTime: QUERY_TIMINGS.LIVE_STALE_MS,
+    gcTime: QUERY_TIMINGS.DETAIL_STALE_MS,
+    refetchOnMount: false,
+  });
+
+  const inventory = inventoryQuery.data?.data ?? [];
 
   const sourceProducts = useMemo(
     () =>
@@ -52,6 +62,14 @@ export default function InventoryTransferDialog({
       ),
     [fromStoreId, inventory, toStoreId],
   );
+  const selectedProduct = sourceProducts.find((item) => item.productId === productId);
+
+  const resetForm = () => {
+    setFromStoreId("");
+    setToStoreId("");
+    setProductId("");
+    setWeight("");
+  };
 
   const transferMutation = useMutation({
     mutationFn: () =>
@@ -70,10 +88,7 @@ export default function InventoryTransferDialog({
         queryClient.invalidateQueries({ queryKey: ["inventory-ledger-summary"] }),
       ]);
       setOpen(false);
-      setFromStoreId("");
-      setToStoreId("");
-      setProductId("");
-      setWeight("");
+      resetForm();
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Failed to transfer inventory.");
@@ -81,7 +96,15 @@ export default function InventoryTransferDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+        if (!nextOpen) {
+          resetForm();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline">
           <ArrowRightLeft className="mr-2 h-4 w-4" />
@@ -152,7 +175,7 @@ export default function InventoryTransferDialog({
               <SelectContent>
                 {sourceProducts.map((item) => (
                   <SelectItem key={`${item.storeId}-${item.productId}`} value={item.productId}>
-                    {item.productName} ({item.measuredQuantity.toFixed(3)} g)
+                    {item.productName} ({item.measuredQuantity.toFixed(3)} {item.measuredUnit})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -169,6 +192,11 @@ export default function InventoryTransferDialog({
               onChange={(event) => setWeight(event.target.value)}
               placeholder="Weight to transfer"
             />
+            {selectedProduct ? (
+              <p className="text-xs text-muted-foreground">
+                Available: {selectedProduct.measuredQuantity.toFixed(3)} {selectedProduct.measuredUnit}
+              </p>
+            ) : null}
           </div>
 
           <Button
