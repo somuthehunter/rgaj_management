@@ -28,6 +28,7 @@ import { logoutUser } from "@/services/auth.service";
 import { protectedRoutes } from "@/routes/protected-routes";
 import { normalizeRole } from "@/lib/auth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import DashboardTourControl from "@/components/Dashboard/DashboardTourControl";
 
 type Props = {
   collapsed: boolean;
@@ -111,6 +112,7 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
 
   return (
     <aside
+      data-tour="sidebar"
       className={cn(
         "fixed left-0 top-0 h-screen bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-300 z-50",
         sidebarWidthClass,
@@ -159,6 +161,23 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
               <Link
                 key={route.path}
                 href={route.path}
+                data-tour={
+                  route.label === "Overview"
+                    ? "nav-overview"
+                    : route.label === "Sell"
+                      ? "nav-sell"
+                      : route.label === "Orders"
+                        ? "nav-orders"
+                        : route.label === "Inventory"
+                          ? "nav-inventory"
+                          : route.label === "Customers"
+                            ? "nav-customers"
+                            : route.label === "Refunds"
+                              ? "nav-refunds"
+                    : route.label === "Products"
+                      ? "nav-products"
+                      : undefined
+                }
                 onClick={() => {
                   if (isMobile) {
                     setMobileExpanded(false);
@@ -200,9 +219,16 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
           "flex items-center",
           isExpanded ? "justify-start" : "justify-center"
         )}>
+          <DashboardTourControl compact={!isExpanded} />
+        </div>
+        <div className={cn(
+          "flex items-center",
+          isExpanded ? "justify-start" : "justify-center"
+        )} data-tour="theme-toggle">
           <ThemeToggle className={isExpanded ? "w-full" : ""} />
         </div>
         <button
+          data-tour="logout"
           onClick={handleLogout}
           className={cn(
             "rounded-lg text-sm hover:bg-destructive/10 hover:text-destructive transition-colors w-full",
@@ -219,6 +245,7 @@ const DashboardSidebar = ({ collapsed, setCollapsed }: Props) => {
       </div>
 
       <button
+        data-tour="sidebar-toggle"
         onClick={() => {
           if (isMobile) {
             setMobileExpanded((previous) => !previous);

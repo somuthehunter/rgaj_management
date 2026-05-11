@@ -48,33 +48,40 @@ export default function CustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
+      <div
+        className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between"
+        data-tour="customers-header"
+      >
         <div>
           <h1 className="text-2xl font-bold">Customers</h1>
           <p className="text-sm text-muted-foreground">
             Track customer purchase history, review all linked orders, and export customer data.
           </p>
         </div>
-        <AddCustomerDialog />
+        <div data-tour="customers-add">
+          <AddCustomerDialog />
+        </div>
       </div>
 
-      <ListControlsBar
-        searchValue={filters.searchInput}
-        onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search by customer name, phone, email, or order ID..."
-        onReset={filters.resetFilters}
-        selectControls={selectControls}
-        extraActions={
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => downloadCustomersCsv(data?.data ?? [])}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-        }
-      />
+      <div data-tour="customers-filters">
+        <ListControlsBar
+          searchValue={filters.searchInput}
+          onSearchValueChange={filters.setSearchInput}
+          searchPlaceholder="Search by customer name, phone, email, or order ID..."
+          onReset={filters.resetFilters}
+          selectControls={selectControls}
+          extraActions={
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => downloadCustomersCsv(data?.data ?? [])}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+          }
+        />
+      </div>
 
       {isLoading ? (
         <p>Loading...</p>
@@ -83,8 +90,9 @@ export default function CustomersPage() {
           {error instanceof Error ? error.message : "Failed to load customers."}
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="customers-table">
           <CustomerTable customers={data?.data} />
+          <div data-tour="customers-pagination">
           <CustomerPagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -97,6 +105,7 @@ export default function CustomersPage() {
             onPrevious={() => filters.setPage(Math.max(1, currentPage - 1))}
             onNext={() => filters.setPage(Math.min(totalPages, currentPage + 1))}
           />
+          </div>
         </div>
       )}
     </div>

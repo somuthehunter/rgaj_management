@@ -147,6 +147,7 @@ export default function DashboardLayout({
       />
 
       <main
+        data-tour="main-content"
         className={`min-h-screen p-4 transition-all duration-300 sm:p-6 ${
           collapsed ? "ml-16 md:ml-16" : "ml-16 md:ml-60"
         }`}

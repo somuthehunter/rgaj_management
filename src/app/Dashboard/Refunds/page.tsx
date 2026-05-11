@@ -46,25 +46,32 @@ export default function RefundsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
+      <div
+        className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between"
+        data-tour="refunds-header"
+      >
         <div>
           <h1 className="text-2xl font-bold">Refunds</h1>
           <p className="text-sm text-muted-foreground">
             Review refund requests, inspect invoice-linked item details, and approve or reject pending returns.
           </p>
         </div>
-        <CreateRefundDialog />
+        <div data-tour="refunds-create">
+          <CreateRefundDialog />
+        </div>
       </div>
 
-      <ListControlsBar
-        searchValue={filters.searchInput}
-        onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search by refund number, RFID, invoice, or store..."
-        onReset={filters.resetFilters}
-        selectControls={selectControls}
-      />
+      <div data-tour="refunds-filters">
+        <ListControlsBar
+          searchValue={filters.searchInput}
+          onSearchValueChange={filters.setSearchInput}
+          searchPlaceholder="Search by refund number, RFID, invoice, or store..."
+          onReset={filters.resetFilters}
+          selectControls={selectControls}
+        />
+      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-tour="refunds-date-filters">
         <div className="space-y-1.5">
           <Label htmlFor="refund-from-date">From Date</Label>
           <Input
@@ -92,8 +99,9 @@ export default function RefundsPage() {
           {error instanceof Error ? error.message : "Failed to load refunds."}
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="refunds-table">
           <RefundTable refunds={data?.data} />
+          <div data-tour="refunds-pagination">
           <RefundPagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -106,6 +114,7 @@ export default function RefundsPage() {
             onPrevious={() => filters.setPage(Math.max(1, currentPage - 1))}
             onNext={() => filters.setPage(Math.min(totalPages, currentPage + 1))}
           />
+          </div>
         </div>
       )}
     </div>
