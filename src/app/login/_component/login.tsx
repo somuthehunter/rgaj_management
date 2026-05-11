@@ -68,6 +68,7 @@ export default function Login() {
                 autoComplete="email"
                 inputMode="email"
                 required
+                className="text-black"
               />
             </div>
 
@@ -82,7 +83,7 @@ export default function Login() {
                   onChange={handleChange}
                   autoComplete="current-password"
                   required
-                  className="pr-10"
+                  className="pr-10 text-black"
                 />
                 <button
                   type="button"
