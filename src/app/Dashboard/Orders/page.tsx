@@ -46,7 +46,10 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between">
+      <div
+        className="flex flex-col items-start gap-2 md:flex-row md:items-center md:justify-between"
+        data-tour="orders-header"
+      >
         <div>
           <h1 className="text-2xl font-bold">Orders</h1>
           <p className="text-sm text-muted-foreground">
@@ -55,13 +58,15 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <ListControlsBar
-        searchValue={filters.searchInput}
-        onSearchValueChange={filters.setSearchInput}
-        searchPlaceholder="Search by order ID, store, customer, or phone..."
-        onReset={filters.resetFilters}
-        selectControls={selectControls}
-      />
+      <div data-tour="orders-filters">
+        <ListControlsBar
+          searchValue={filters.searchInput}
+          onSearchValueChange={filters.setSearchInput}
+          searchPlaceholder="Search by order ID, store, customer, or phone..."
+          onReset={filters.resetFilters}
+          selectControls={selectControls}
+        />
+      </div>
 
       {isLoading ? (
         <p>Loading...</p>
@@ -70,8 +75,9 @@ export default function OrdersPage() {
           {error instanceof Error ? error.message : "Failed to load orders."}
         </p>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4" data-tour="orders-table">
           <OrderTable orders={data?.data} />
+          <div data-tour="orders-pagination">
           <OrderPagination
             currentPage={currentPage}
             totalItems={totalItems}
@@ -84,6 +90,7 @@ export default function OrdersPage() {
             onPrevious={() => filters.setPage(Math.max(1, currentPage - 1))}
             onNext={() => filters.setPage(Math.min(totalPages, currentPage + 1))}
           />
+          </div>
         </div>
       )}
     </div>

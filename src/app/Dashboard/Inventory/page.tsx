@@ -181,10 +181,13 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start md:flex-row md:items-center md:justify-between">
+      <div
+        className="flex flex-col items-start md:flex-row md:items-center md:justify-between"
+        data-tour="inventory-header"
+      >
         <h1 className="text-2xl font-bold">Inventory</h1>
         {isAdmin && (
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2" data-tour="inventory-actions">
             <InventoryReceiveStockDialog />
             <InventoryDistributeDialog stores={storesQuery.data?.data ?? []} />
             <InventoryTransferDialog stores={storesQuery.data?.data ?? []} />
@@ -284,7 +287,7 @@ export default function InventoryPage() {
         </div>
       )}
 
-      <div className="rounded-lg border bg-card">
+      <div className="rounded-lg border bg-card" data-tour="inventory-store-section">
         <button
           type="button"
           onClick={() => setStoreOpen((value) => !value)}
@@ -303,13 +306,15 @@ export default function InventoryPage() {
 
         {storeOpen && (
           <div className="space-y-4 border-t px-4 py-4">
-            <ListControlsBar
-              searchValue={filters.searchInput}
-              onSearchValueChange={filters.setSearchInput}
-              searchPlaceholder="Search inventory by product, SKU, or store..."
-              onReset={filters.resetFilters}
-              selectControls={selectControls}
-            />
+            <div data-tour="inventory-filters">
+              <ListControlsBar
+                searchValue={filters.searchInput}
+                onSearchValueChange={filters.setSearchInput}
+                searchPlaceholder="Search inventory by product, SKU, or store..."
+                onReset={filters.resetFilters}
+                selectControls={selectControls}
+              />
+            </div>
 
             {isLoading ? (
               <p>Loading...</p>
@@ -318,8 +323,9 @@ export default function InventoryPage() {
                 {error instanceof Error ? error.message : "Failed to load inventory."}
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4" data-tour="inventory-table">
                 <InventoryTable inventory={data?.data} />
+                <div data-tour="inventory-pagination">
                 <InventoryPagination
                   currentPage={currentPage}
                   totalPages={totalPages}
@@ -334,6 +340,7 @@ export default function InventoryPage() {
                   onNext={() => filters.setPage(Math.min(totalPages, currentPage + 1))}
                   label="store stock records"
                 />
+                </div>
               </div>
             )}
           </div>

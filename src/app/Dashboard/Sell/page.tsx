@@ -58,7 +58,7 @@ export default function SellPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div data-tour="sell-header">
         <h1 className="text-2xl font-bold">Create Bill</h1>
         <p className="text-sm text-muted-foreground">
           Create a backend invoice from live store inventory and customer details.
@@ -66,7 +66,7 @@ export default function SellPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
-        <Card>
+        <Card data-tour="sell-form-card">
           <CardHeader>
             <CardTitle className="text-lg">Billing Form</CardTitle>
             <CardDescription>
@@ -75,7 +75,7 @@ export default function SellPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={submitBill} className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2" data-tour="sell-customer-fields">
                 {isSuperAdmin && (
                   <div className="space-y-2">
                     <Label>Store *</Label>
@@ -178,17 +178,22 @@ export default function SellPage() {
                   No sellable stock is available for {selectedStoreName || "the selected store"} yet.
                 </div>
               ) : (
-                <BillItemsEditor
+                <div data-tour="sell-items-editor">
+                  <BillItemsEditor
                   control={form.control}
                   register={form.register}
                   watch={form.watch}
                   errors={form.formState.errors}
                   products={products}
                   itemsFieldArray={itemsFieldArray}
-                />
+                  />
+                </div>
               )}
 
-              <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-4">
+              <div
+                className="flex items-center justify-between rounded-lg border bg-muted/30 p-4"
+                data-tour="sell-generate"
+              >
                 <div className="space-y-1 text-sm">
                   <p className="text-muted-foreground">
                     Estimated subtotal: {formatOrderCurrency(summary.subtotal)}
@@ -220,7 +225,7 @@ export default function SellPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-6" data-tour="sell-generated-bill">
           <GeneratedBillCard invoice={generatedInvoice} />
         </div>
       </div>

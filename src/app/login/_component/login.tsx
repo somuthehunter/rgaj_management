@@ -10,11 +10,8 @@ import { Input } from "@/components/ui/input";
 export default function Login() {
   const { formData, handleChange, handleSubmit, submitLogin, isPending } = useLogin();
   const [showPassword, setShowPassword] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsHydrated(true);
-
     if (window.location.search) {
       window.history.replaceState({}, "", "/login");
     }
@@ -107,9 +104,8 @@ export default function Login() {
             </div>
 
             <Button
-              type="button"
-              onClick={submitLogin}
-              disabled={!isHydrated || isPending}
+              type="submit"
+              disabled={isPending}
               className="w-full"
             >
               {isPending ? "Signing in..." : "Sign In"}
