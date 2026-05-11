@@ -35,19 +35,14 @@ export default function TransactionTable({
       ),
     },
     {
-      id: "entity-id",
-      header: "Entity ID",
-      cell: (transaction) => transaction.entityId || "N/A",
+      id: "entity",
+      header: "Entity",
+      cell: (transaction) => transaction.entity || "N/A",
     },
     {
       id: "user-id",
       header: "User ID",
       cell: (transaction) => transaction.userId,
-    },
-    {
-      id: "ip",
-      header: "IP Address",
-      cell: (transaction) => transaction.ipAddress || "N/A",
     },
     {
       id: "date",

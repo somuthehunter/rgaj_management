@@ -62,7 +62,7 @@ export default function ProductsPage() {
   const to = Math.min(currentPage * itemsPerPage, totalItems);
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
-  const canEdit = role === UserRole.SUPER_ADMIN || role === UserRole.STORE_ADMIN;
+  const canEdit = role === UserRole.SUPER_ADMIN ;
   const canManageStatus = role === UserRole.SUPER_ADMIN;
 
   return (
